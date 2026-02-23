@@ -120,7 +120,19 @@ def get_employees(db: Session = Depends(get_db)):
         for e in employees
     ]
 
+from fastapi import HTTPException
 
+@app.delete("/employees/{employee_id}")
+def delete_employee(employee_id: int, db: Session = Depends(get_db)):
+    emp = db.query(Employee).filter(Employee.id == employee_id).first()
+
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    db.delete(emp)
+    db.commit()
+
+    return {"status": "deleted"}
 # ================= SERVICES =================
 
 @app.post("/services")
