@@ -311,7 +311,7 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
 
 # ================= FRONTEND =================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+# # app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
