@@ -393,13 +393,17 @@ def seed_services(db: Session = Depends(get_db)):
 
 # ================= FRONTEND =================
 
+import os
+from fastapi.staticfiles import StaticFiles
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
+print("BASE_DIR:", BASE_DIR)
+print("FRONTEND_DIR:", FRONTEND_DIR)
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
-
-import os
 import uvicorn
 
 if __name__ == "__main__":
