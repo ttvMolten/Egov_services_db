@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ панель</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-8">
+
+<!-- TOAST -->
+<div id="toast"
+     class="fixed top-5 right-5 bg-black text-white px-6 py-3 rounded-xl shadow-lg hidden z-50">
+</div>
+
+<div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                Админ панель
+            </h1>
+            <p id="reportDate"
+               class="text-gray-500 text-sm mt-1"></p>
+        </div>
+
+        <button id="logoutBtn"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+            Выйти
+        </button>
+    </div>
+
+    <!-- Report Controls -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-700">
+            Отчёт за сегодня
+        </h2>
+
+        <button id="sendReport"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition">
+            Отправить в Telegram
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-200 text-gray-700">
+                <tr>
+                    <th class="p-3 text-left">Сотрудник</th>
+                    <th class="p-3 text-center">Услуги</th>
+                    <th class="p-3 text-center">Сумма</th>
+                    <th class="p-3 text-center">Нал</th>
+                    <th class="p-3 text-center">QR</th>
+                </tr>
+            </thead>
+            <tbody id="reportTable"
+                    class="divide-y divide-gray-200">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totals -->
+    <div id="totalBox"
+        class="mt-6 p-4 bg-gray-100 rounded-xl text-lg font-semibold text-gray-800">
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal"
+     class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+
+    <div class="bg-white w-full max-w-lg p-6 rounded-2xl shadow-xl transform transition scale-100">
+
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle"
+                class="text-xl font-bold text-gray-800"></h3>
+            <button onclick="closeModal()"
+                    class="text-gray-500 hover:text-black text-lg">
+                ✕
+            </button>
+        </div>
+
+        <div id="modalContent"
+             class="text-sm space-y-2 max-h-96 overflow-y-auto">
+        </div>
+
+    </div>
+</div>
+
+<script src="./admin.js"></script>
+
+</body>
+</html>

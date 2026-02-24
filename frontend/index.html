@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Рабочее место</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<!-- TOAST -->
+<div id="toast"
+     class="fixed top-5 right-5 bg-black text-white px-6 py-3 rounded-xl shadow-lg hidden z-50">
+</div>
+
+<!-- PIN SCREEN -->
+<div id="pinScreen" class="flex items-center justify-center h-screen">
+    <div class="bg-white p-6 rounded-xl shadow w-80">
+        <h2 class="text-xl font-semibold mb-4 text-center">
+            Вход в систему
+        </h2>
+
+        <input id="pinInput" type="password"
+               class="w-full border rounded px-3 py-2 mb-3"
+               placeholder="PIN" />
+
+        <button id="pinBtn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition">
+            Войти
+        </button>
+
+        <p id="pinError"
+           class="text-red-500 text-sm mt-2 text-center"></p>
+    </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen" class="hidden max-w-xl mx-auto py-8 px-4">
+
+    <!-- HEADER -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl mb-6 shadow">
+        <div class="flex justify-between items-center">
+            <h1 id="employeeName" class="text-lg font-semibold"></h1>
+            <button id="logoutBtn"
+                    class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition">
+                Закрыть смену
+            </button>
+        </div>
+    </div>
+
+    <!-- CREATE ORDER -->
+    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+        <select id="serviceSelect"
+                class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500">
+        </select>
+
+        <input id="clientName"
+               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
+               placeholder="Имя клиента"/>
+
+        <input id="clientPhone"
+               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
+               placeholder="Телефон клиента"/>
+
+        <button id="startBtn"
+                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded transition">
+            Начать услугу
+        </button>
+
+        <p id="statusMsg"
+           class="text-center text-sm"></p>
+    </div>
+
+    <!-- IN PROGRESS -->
+    <div class="mt-8">
+        <h2 class="font-semibold mb-4 text-gray-700">
+            Услуги в процессе
+        </h2>
+        <div id="inProgressList" class="space-y-3"></div>
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
