@@ -195,7 +195,6 @@ def get_in_progress(employee_id: int, db: Session = Depends(get_db)):
 
     return result
 # ================= SHIFT CLOSE =================
-
 @app.post("/shifts/end")
 def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
@@ -219,22 +218,53 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
         Order.completed_at <= shift.ended_at
     ).all()
 
-    total = sum(o.service.price for o in orders if o.service)
-    cash = sum(o.service.price for o in orders if o.payment_type == "CASH" and o.service)
-    qr = sum(o.service.price for o in orders if o.payment_type == "QR" and o.service)
+    total = 0
+    cash = 0
+    qr = 0
 
-    send_telegram(
-        f"📊 Смена закрыта\n\n"
-        f"Сотрудник: {shift.employee.name}\n"
-        f"Услуг: {len(orders)}\n"
-        f"Сумма: {total} ₸\n"
-        f"Нал: {cash} ₸\n"
-        f"QR: {qr} ₸"
-    )
+    message = "📊 Смена закрыта\n\n"
+    message += f"👤 Сотрудник: {shift.employee.name}\n"
+
+    start_local = shift.started_at + timedelta(hours=5)
+    end_local = shift.ended_at + timedelta(hours=5)
+
+    message += f"🕒 Смена: {start_local.strftime('%H:%M')} — {end_local.strftime('%H:%M')}\n\n"
+    message += "━━━━━━━━━━━━━━\n\n"
+
+    for i, o in enumerate(orders, 1):
+
+        if not o.service:
+            continue
+
+        price = o.service.price
+        total += price
+
+        if o.payment_type == "CASH":
+            cash += price
+        elif o.payment_type == "QR":
+            qr += price
+
+        start_time = o.created_at + timedelta(hours=5)
+        end_time = o.completed_at + timedelta(hours=5)
+
+        duration = int((o.completed_at - o.created_at).total_seconds() / 60)
+
+        message += (
+            f"{i}. {o.service.name}\n"
+            f"Клиент: {o.client_name}\n"
+            f"{start_time.strftime('%H:%M')} → {end_time.strftime('%H:%M')} ({duration} мин)\n"
+            f"Оплата: {o.payment_type}\n\n"
+        )
+
+    message += "━━━━━━━━━━━━━━\n"
+    message += f"Услуг: {len(orders)}\n"
+    message += f"💰 Сумма: {total} ₸\n"
+    message += f"Нал: {cash} ₸\n"
+    message += f"QR: {qr} ₸"
+
+    send_telegram(message)
 
     return {"status": "ended"}
-
-
 # ================= ADMIN REPORT =================
 
 @app.get("/admin/report/today")
