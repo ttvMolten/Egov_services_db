@@ -323,11 +323,14 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
     start_utc, end_utc = get_local_day_range()
     employees = db.query(Employee).all()
 
-    message = "📊 Отчёт за сегодня\n\n"
+    message = "📊 Подробный отчёт за сегодня\n\n"
 
     total_all = 0
+    cash_all = 0
+    qr_all = 0
 
     for emp in employees:
+
         orders = db.query(Order).filter(
             Order.employee_id == emp.id,
             Order.status == "COMPLETED",
@@ -336,16 +339,59 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
             Order.completed_at <= end_utc
         ).all()
 
-        total = sum(o.service.price for o in orders if o.service)
-        total_all += total
+        if not orders:
+            continue
+
+        message += f"👤 {emp.name}\n\n"
+
+        emp_total = 0
+        emp_cash = 0
+        emp_qr = 0
+
+        for i, o in enumerate(orders, 1):
+
+            if not o.service:
+                continue
+
+            price = o.service.price
+            emp_total += price
+            total_all += price
+
+            if o.payment_type == "CASH":
+                emp_cash += price
+                cash_all += price
+            elif o.payment_type == "QR":
+                emp_qr += price
+                qr_all += price
+
+            start_time = o.created_at + timedelta(hours=5)
+            end_time = o.completed_at + timedelta(hours=5)
+
+            duration = int((o.completed_at - o.created_at).total_seconds() / 60)
+
+            message += (
+                f"{i}. {o.service.name}\n"
+                f"Клиент: {o.client_name}\n"
+                f"{start_time.strftime('%H:%M')} → {end_time.strftime('%H:%M')} ({duration} мин)\n"
+                f"Оплата: {o.payment_type}\n\n"
+            )
 
         message += (
-            f"{emp.name}\n"
+            f"Итого по {emp.name}:\n"
             f"Услуг: {len(orders)}\n"
-            f"Сумма: {total} ₸\n\n"
+            f"Сумма: {emp_total} ₸\n"
+            f"Нал: {emp_cash} ₸\n"
+            f"QR: {emp_qr} ₸\n"
         )
 
-    message += f"💰 Общая касса: {total_all} ₸"
+        message += "\n━━━━━━━━━━━━━━\n\n"
+
+    message += (
+        f"💰 Общий итог:\n"
+        f"Сумма: {total_all} ₸\n"
+        f"Нал: {cash_all} ₸\n"
+        f"QR: {qr_all} ₸"
+    )
 
     send_telegram(message)
 
