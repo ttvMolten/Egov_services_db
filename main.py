@@ -299,7 +299,10 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
             Order.completed_at <= end_utc
         ).all()
 
-        total = sum(o.service.price for o in orders if o.service)
+        total = sum(
+        sum(os.service.price for os in o.services)
+        for o in orders
+)
         cash = sum(o.service.price for o in orders if o.payment_type == "CASH" and o.service)
         qr = sum(o.service.price for o in orders if o.payment_type == "QR" and o.service)
 
@@ -323,7 +326,6 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         "cash_all": cash_all,
         "qr_all": qr_all
     }
-
 @app.post("/admin/report/today/send")
 def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
 
@@ -405,6 +407,11 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
     send_telegram(message)
 
     return {"status": "sent"}
+
+from models import Service
+from database import SessionLocal
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from models import Service
 from database import SessionLocal
