@@ -186,13 +186,18 @@ def get_in_progress(employee_id: int, db: Session = Depends(get_db)):
         if o.created_at:
             minutes = int((now - o.created_at).total_seconds() / 60)
 
-        result.append({
-            "order_id": o.id,
-            "service": o.service.name if o.service else "",
-            "client_name": o.client_name,
-            "minutes_in_progress": minutes
-        })
+    services_names = []
 
+    for os in o.services:
+     if os.service:
+      services_names.append(os.service.name)
+
+    result.append({
+    "order_id": o.id,
+    "services": services_names,
+    "client_name": o.client_name,
+    "minutes_in_progress": minutes
+})
     return result
 # ================= SHIFT CLOSE =================
 @app.post("/shifts/end")
