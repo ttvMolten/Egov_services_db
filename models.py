@@ -72,14 +72,6 @@ class Order(Base):
     services = relationship("OrderService", backref="order")
     services = relationship("OrderService", backref="order", cascade="all, delete")
 
-class OrderService(Base):
-    __tablename__ = "order_services"
-
-    id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey("orders.id"))
-    service_id = Column(Integer, ForeignKey("services.id"))
-
-    service = relationship("Service")
 
 class OrderService(Base):
     __tablename__ = "order_services"
