@@ -235,13 +235,14 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
     message += f"🕒 Смена: {start_local.strftime('%H:%M')} — {end_local.strftime('%H:%M')}\n\n"
     message += "━━━━━━━━━━━━━━\n\n"
-
+    services_count = 0
     for i, o in enumerate(orders, 1):
 
         if not o.service:
             continue
         
         order_total = sum(os.service.price for os in o.services)
+        services_count += len(o.services)
 
     total += order_total
 
@@ -265,7 +266,7 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
         )
 
     message += "━━━━━━━━━━━━━━\n"
-    message += f"Услуг: {len(orders)}\n"
+    message += f"Услуг: {services_count}\n"
     message += f"💰 Сумма: {total} ₸\n"
     message += f"Нал: {cash} ₸\n"
     message += f"QR: {qr} ₸"
