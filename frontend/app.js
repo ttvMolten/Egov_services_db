@@ -91,7 +91,7 @@ async function loadServices() {
     const res = await fetch(`${API}/services`);
     const services = await res.json();
 
-    serviceSelect.innerHTML = `<option value="">Выберите услугу</option>`;
+    serviceSelect.innerHTML = "";
 
     services.forEach(s => {
         const opt = document.createElement("option");
@@ -108,11 +108,13 @@ startBtn.onclick = async () => {
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
     if (!auth) return;
 
-    const serviceId = serviceSelect.value;
+    const selectedOptions = Array.from(serviceSelect.selectedOptions);
+    const serviceIds = selectedOptions.map(opt => Number(opt.value));
+
     const name = clientName.value.trim();
     const phone = clientPhone.value.trim();
 
-    if (!serviceId || !name || !phone) {
+    if (!serviceIds.length || !name || !phone) {
         showToast("Заполните все поля", "error");
         return;
     }
@@ -123,7 +125,7 @@ startBtn.onclick = async () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            service_id: Number(serviceId),
+            service_ids: serviceIds,
             branch_id: 1,
             employee_id: auth.employee_id,
             client_name: name,
@@ -134,10 +136,10 @@ startBtn.onclick = async () => {
     const data = await res.json();
 
     if (data.order_id) {
-        showToast("Услуга начата");
+        showToast("Услуги начаты");
         clientName.value = "";
         clientPhone.value = "";
-        serviceSelect.value = "";
+        serviceSelect.selectedIndex = -1;
         loadInProgress();
     } else {
         showToast(data.error || "Ошибка", "error");
@@ -166,6 +168,11 @@ async function loadInProgress() {
 
     orders.forEach(o => {
 
+        // безопасный вывод
+        const servicesText = o.services
+            ? o.services.join(", ")
+            : o.service;
+
         const card = document.createElement("div");
         card.className =
             "bg-white p-4 rounded-xl shadow space-y-3 transform transition hover:scale-[1.02]";
@@ -173,7 +180,7 @@ async function loadInProgress() {
         card.innerHTML = `
             <div class="flex justify-between">
                 <div>
-                    <p class="font-semibold">${o.service}</p>
+                    <p class="font-semibold">${servicesText}</p>
                     <p class="text-sm text-gray-500">${o.client_name}</p>
                 </div>
                 <div class="text-sm">
