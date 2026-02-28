@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Optional
 
 class ServiceCreate(BaseModel):
     name: str
@@ -6,9 +7,10 @@ class ServiceCreate(BaseModel):
 
 
 class OrderStart(BaseModel):
-    service_id: int
-    branch_id: int
+    service_id: Optional[int] = None
+    service_ids: Optional[List[int]] = None
     employee_id: int
+    branch_id: int
     client_name: str
     client_phone: str
 

@@ -1,16 +1,23 @@
 from sqlalchemy.orm import Session
-from models import Order, Service, Employee, Shift
+from models import Order, Service, Employee, Shift, OrderService
 import datetime
 
 
 def start_order(db: Session, data):
 
-    service = db.query(Service).filter(Service.id == data.service_id).first()
+    # 🔥 Определяем список услуг
+    if hasattr(data, "service_ids") and data.service_ids:
+        service_ids = data.service_ids
+    else:
+        service_ids = [data.service_id]
+
+    # Проверяем сотрудника
     employee = db.query(Employee).filter(Employee.id == data.employee_id).first()
 
-    if not service or not employee or not employee.is_active:
-        return {"error": "Invalid service or employee"}
+    if not employee or not employee.is_active:
+        return {"error": "Invalid employee"}
 
+    # Проверяем активную смену
     active_shift = db.query(Shift).filter(
         Shift.employee_id == data.employee_id,
         Shift.is_active == True
@@ -19,8 +26,17 @@ def start_order(db: Session, data):
     if not active_shift:
         return {"error": "No active shift"}
 
+    # Проверяем услуги
+    services = db.query(Service).filter(Service.id.in_(service_ids)).all()
+
+    if not services or len(services) != len(service_ids):
+        return {"error": "Invalid services"}
+
+    # 🔥 Первая услуга — в Order (для совместимости)
+    main_service = services[0]
+
     order = Order(
-        service_id=service.id,
+        service_id=main_service.id,
         employee_id=data.employee_id,
         branch_id=data.branch_id,
         client_name=data.client_name,
@@ -32,6 +48,16 @@ def start_order(db: Session, data):
     db.add(order)
     db.commit()
     db.refresh(order)
+
+    # 🔥 Если услуг больше одной — добавляем в связующую таблицу
+    for service in services:
+        order_service = OrderService(
+            order_id=order.id,
+            service_id=service.id
+        )
+        db.add(order_service)
+
+    db.commit()
 
     return {"order_id": order.id}
 
