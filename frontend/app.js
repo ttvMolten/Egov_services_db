@@ -19,7 +19,10 @@ const clientPhone = document.getElementById("clientPhone");
 const startBtn = document.getElementById("startBtn");
 const statusMsg = document.getElementById("statusMsg");
 const inProgressList = document.getElementById("inProgressList");
+const addServiceBtn = document.getElementById("addServiceBtn");
+const selectedServicesContainer = document.getElementById("selectedServices");
 
+let selectedServices = [];
 /* ================= TOAST ================= */
 
 function showToast(message, type = "success") {
@@ -103,19 +106,17 @@ async function loadServices() {
 
 /* ================= START ORDER ================= */
 
+
 startBtn.onclick = async () => {
 
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
     if (!auth) return;
 
-    const selectedOptions = Array.from(serviceSelect.selectedOptions);
-    const serviceIds = selectedOptions.map(opt => Number(opt.value));
-
     const name = clientName.value.trim();
     const phone = clientPhone.value.trim();
 
-    if (!serviceIds.length || !name || !phone) {
-        showToast("Заполните все поля", "error");
+    if (!selectedServices.length || !name || !phone) {
+        showToast("Добавьте хотя бы одну услугу", "error");
         return;
     }
 
@@ -125,7 +126,7 @@ startBtn.onclick = async () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            service_ids: serviceIds,
+            service_ids: selectedServices,
             branch_id: 1,
             employee_id: auth.employee_id,
             client_name: name,
@@ -137,9 +138,12 @@ startBtn.onclick = async () => {
 
     if (data.order_id) {
         showToast("Услуги начаты");
+
         clientName.value = "";
         clientPhone.value = "";
-        serviceSelect.selectedIndex = -1;
+        selectedServices = [];
+        renderSelectedServices();
+
         loadInProgress();
     } else {
         showToast(data.error || "Ошибка", "error");
@@ -259,6 +263,53 @@ logoutBtn.onclick = async () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
 };
+
+addServiceBtn.onclick = () => {
+    const serviceId = Number(serviceSelect.value);
+
+    if (!serviceId) return;
+
+    // проверка чтобы не добавлять повторно
+    if (selectedServices.includes(serviceId)) {
+        showToast("Услуга уже добавлена", "error");
+        return;
+    }
+
+    selectedServices.push(serviceId);
+
+    renderSelectedServices();
+};
+
+
+function renderSelectedServices() {
+    selectedServicesContainer.innerHTML = "";
+
+    selectedServices.forEach(id => {
+
+        const option = serviceSelect.querySelector(`option[value="${id}"]`);
+        const name = option ? option.textContent : "Услуга";
+
+        const item = document.createElement("div");
+        item.className =
+            "flex justify-between items-center bg-gray-100 px-3 py-2 rounded";
+
+        item.innerHTML = `
+            <span>${name}</span>
+            <button class="text-red-600 text-sm"
+                onclick="removeService(${id})">
+                ✖
+            </button>
+        `;
+
+        selectedServicesContainer.appendChild(item);
+    });
+}
+
+
+function removeService(id) {
+    selectedServices = selectedServices.filter(s => s !== id);
+    renderSelectedServices();
+}
 
 /* ================= INIT ================= */
 
