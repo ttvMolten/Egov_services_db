@@ -69,3 +69,13 @@ class Order(Base):
 
     service = relationship("Service", back_populates="orders")
     employee = relationship("Employee", back_populates="orders")
+    services = relationship("OrderService", backref="order")
+
+class OrderService(Base):
+    __tablename__ = "order_services"
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey("orders.id"))
+    service_id = Column(Integer, ForeignKey("services.id"))
+
+    service = relationship("Service")
