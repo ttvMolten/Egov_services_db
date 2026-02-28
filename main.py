@@ -240,22 +240,25 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
         if not o.service:
             continue
+        
+        order_total = sum(os.service.price for os in o.services)
 
-        price = o.service.price
-        total += price
+    total += order_total
 
-        if o.payment_type == "CASH":
-            cash += price
-        elif o.payment_type == "QR":
-            qr += price
+    if o.payment_type == "CASH":
+        cash += order_total
+    elif o.payment_type == "QR":
+        qr += order_total
+
 
         start_time = o.created_at + timedelta(hours=5)
         end_time = o.completed_at + timedelta(hours=5)
 
         duration = int((o.completed_at - o.created_at).total_seconds() / 60)
+        services_names = ", ".join(os.service.name for os in o.services)
 
         message += (
-            f"{i}. {o.service.name}\n"
+            f"{i}. {services_names}\n"
             f"Клиент: {o.client_name}\n"
             f"{start_time.strftime('%H:%M')} → {end_time.strftime('%H:%M')} ({duration} мин)\n"
             f"Оплата: {o.payment_type}\n\n"
