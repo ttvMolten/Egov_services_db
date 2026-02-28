@@ -168,7 +168,6 @@ def finish_order(order_id: int, data: OrderComplete, db: Session = Depends(get_d
 @app.post("/orders/{order_id}/not-provided")
 def fail_order(order_id: int, data: OrderNotProvided, db: Session = Depends(get_db)):
     return not_provided(db, order_id, data.reason)
-
 @app.get("/orders/in-progress")
 def get_in_progress(employee_id: int, db: Session = Depends(get_db)):
 
@@ -182,22 +181,24 @@ def get_in_progress(employee_id: int, db: Session = Depends(get_db)):
     result = []
 
     for o in orders:
+
         minutes = 0
         if o.created_at:
             minutes = int((now - o.created_at).total_seconds() / 60)
 
-    services_names = []
+        services_names = []
 
-    for os in o.services:
-     if os.service:
-      services_names.append(os.service.name)
+        for os in o.services:
+            if os.service:
+                services_names.append(os.service.name)
 
-    result.append({
-    "order_id": o.id,
-    "services": services_names,
-    "client_name": o.client_name,
-    "minutes_in_progress": minutes
-})
+        result.append({
+            "order_id": o.id,
+            "services": services_names,
+            "client_name": o.client_name,
+            "minutes_in_progress": minutes
+        })
+
     return result
 # ================= SHIFT CLOSE =================
 @app.post("/shifts/end")
