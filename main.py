@@ -325,14 +325,16 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         cash_all += cash
         qr_all += qr
 
-        result.append({
-            "employee_id": emp.id,
-            "employee": emp.name,
-            "services_count": services_count,
-            "total": total,
-            "cash": cash,
-            "qr": qr
-        })
+    services_count = sum(len(o.services) for o in orders)
+
+    result.append({
+    "employee_id": emp.id,
+    "employee": emp.name,
+    "services_count": services_count,
+    "total": total,
+    "cash": cash,
+    "qr": qr
+})
 
     return {
         "date": str((datetime.utcnow() + timedelta(hours=5)).date()),
