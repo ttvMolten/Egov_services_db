@@ -146,12 +146,12 @@ def create_service(data: ServiceCreate, db: Session = Depends(get_db)):
 
 @app.get("/services")
 def get_services(db: Session = Depends(get_db)):
-    services = db.query(Service).all()
+    services = db.query(Service).order_by(Service.id.desc()).all()
+
     return [
         {"id": s.id, "name": s.name, "price": s.price}
         for s in services
     ]
-
 
 # ================= ORDERS =================
 
