@@ -112,11 +112,14 @@ startBtn.onclick = async () => {
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
     if (!auth) return;
 
+    const selectedOptions = Array.from(serviceSelect.selectedOptions);
+    const serviceIds = selectedOptions.map(opt => Number(opt.value));
+
     const name = clientName.value.trim();
     const phone = clientPhone.value.trim();
 
-    if (!selectedServices.length || !name || !phone) {
-        showToast("Добавьте хотя бы одну услугу", "error");
+    if (!serviceIds.length || !name || !phone) {
+        showToast("Заполните все поля", "error");
         return;
     }
 
@@ -126,7 +129,7 @@ startBtn.onclick = async () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            service_ids: selectedServices,
+            service_ids: serviceIds,
             branch_id: 1,
             employee_id: auth.employee_id,
             client_name: name,
@@ -138,12 +141,9 @@ startBtn.onclick = async () => {
 
     if (data.order_id) {
         showToast("Услуги начаты");
-
         clientName.value = "";
         clientPhone.value = "";
-        selectedServices = [];
-        renderSelectedServices();
-
+        serviceSelect.selectedIndex = -1;
         loadInProgress();
     } else {
         showToast(data.error || "Ошибка", "error");
