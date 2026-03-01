@@ -17,12 +17,13 @@ const serviceSelect = document.getElementById("serviceSelect");
 const clientName = document.getElementById("clientName");
 const clientPhone = document.getElementById("clientPhone");
 const startBtn = document.getElementById("startBtn");
-const statusMsg = document.getElementById("statusMsg");
 const inProgressList = document.getElementById("inProgressList");
+
 const addServiceBtn = document.getElementById("addServiceBtn");
 const selectedServicesContainer = document.getElementById("selectedServices");
 
 let selectedServices = [];
+
 /* ================= TOAST ================= */
 
 function showToast(message, type = "success") {
@@ -94,7 +95,7 @@ async function loadServices() {
     const res = await fetch(`${API}/services`);
     const services = await res.json();
 
-    serviceSelect.innerHTML = "";
+    serviceSelect.innerHTML = `<option value="">Выберите услугу</option>`;
 
     services.forEach(s => {
         const opt = document.createElement("option");
@@ -104,24 +105,69 @@ async function loadServices() {
     });
 }
 
-/* ================= START ORDER ================= */
+/* ================= ADD SERVICE ================= */
 
+addServiceBtn.onclick = () => {
+    const serviceId = Number(serviceSelect.value);
+
+    if (!serviceId) return;
+
+    if (selectedServices.includes(serviceId)) {
+        showToast("Услуга уже добавлена", "error");
+        return;
+    }
+
+    selectedServices.push(serviceId);
+    renderSelectedServices();
+};
+
+/* ================= RENDER SELECTED ================= */
+
+function renderSelectedServices() {
+    selectedServicesContainer.innerHTML = "";
+
+    selectedServices.forEach(id => {
+
+        const option = serviceSelect.querySelector(`option[value="${id}"]`);
+        const name = option ? option.textContent : "Услуга";
+
+        const item = document.createElement("div");
+        item.className =
+            "flex justify-between items-center bg-gray-100 px-3 py-2 rounded";
+
+        item.innerHTML = `
+            <span>${name}</span>
+            <button class="text-red-600 text-sm"
+                onclick="removeService(${id})">
+                ✖
+            </button>
+        `;
+
+        selectedServicesContainer.appendChild(item);
+    });
+}
+
+function removeService(id) {
+    selectedServices = selectedServices.filter(s => s !== id);
+    renderSelectedServices();
+}
+
+/* ================= START ORDER ================= */
 
 startBtn.onclick = async () => {
 
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
     if (!auth) return;
 
-    const selectedOptions = Array.from(serviceSelect.selectedOptions);
-    const serviceIds = selectedOptions.map(opt => Number(opt.value));
-
     const name = clientName.value.trim();
     const phone = clientPhone.value.trim();
 
-    if (!serviceIds.length || !name || !phone) {
-        showToast("Заполните все поля", "error");
+    if (!selectedServices.length || !name || !phone) {
+        showToast("Добавьте услуги и заполните поля", "error");
         return;
     }
+
+    console.log("Sending services:", selectedServices);
 
     startBtn.disabled = true;
 
@@ -129,7 +175,7 @@ startBtn.onclick = async () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            service_ids: serviceIds,
+            service_ids: selectedServices,
             branch_id: 1,
             employee_id: auth.employee_id,
             client_name: name,
@@ -141,9 +187,12 @@ startBtn.onclick = async () => {
 
     if (data.order_id) {
         showToast("Услуги начаты");
+
         clientName.value = "";
         clientPhone.value = "";
-        serviceSelect.selectedIndex = -1;
+        selectedServices = [];
+        renderSelectedServices();
+
         loadInProgress();
     } else {
         showToast(data.error || "Ошибка", "error");
@@ -172,14 +221,13 @@ async function loadInProgress() {
 
     orders.forEach(o => {
 
-        // безопасный вывод
         const servicesText = o.services
             ? o.services.join(", ")
-            : o.service;
+            : "";
 
         const card = document.createElement("div");
         card.className =
-            "bg-white p-4 rounded-xl shadow space-y-3 transform transition hover:scale-[1.02]";
+            "bg-white p-4 rounded-xl shadow space-y-3";
 
         card.innerHTML = `
             <div class="flex justify-between">
@@ -263,53 +311,6 @@ logoutBtn.onclick = async () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
 };
-
-addServiceBtn.onclick = () => {
-    const serviceId = Number(serviceSelect.value);
-
-    if (!serviceId) return;
-
-    // проверка чтобы не добавлять повторно
-    if (selectedServices.includes(serviceId)) {
-        showToast("Услуга уже добавлена", "error");
-        return;
-    }
-
-    selectedServices.push(serviceId);
-
-    renderSelectedServices();
-};
-
-
-function renderSelectedServices() {
-    selectedServicesContainer.innerHTML = "";
-
-    selectedServices.forEach(id => {
-
-        const option = serviceSelect.querySelector(`option[value="${id}"]`);
-        const name = option ? option.textContent : "Услуга";
-
-        const item = document.createElement("div");
-        item.className =
-            "flex justify-between items-center bg-gray-100 px-3 py-2 rounded";
-
-        item.innerHTML = `
-            <span>${name}</span>
-            <button class="text-red-600 text-sm"
-                onclick="removeService(${id})">
-                ✖
-            </button>
-        `;
-
-        selectedServicesContainer.appendChild(item);
-    });
-}
-
-
-function removeService(id) {
-    selectedServices = selectedServices.filter(s => s !== id);
-    renderSelectedServices();
-}
 
 /* ================= INIT ================= */
 

@@ -8,12 +8,10 @@
 
 <body class="bg-gray-100 min-h-screen">
 
-<!-- TOAST -->
 <div id="toast"
      class="fixed top-5 right-5 bg-black text-white px-6 py-3 rounded-xl shadow-lg hidden z-50">
 </div>
 
-<!-- PIN SCREEN -->
 <div id="pinScreen" class="flex items-center justify-center h-screen">
     <div class="bg-white p-6 rounded-xl shadow w-80">
         <h2 class="text-xl font-semibold mb-4 text-center">
@@ -34,10 +32,8 @@
     </div>
 </div>
 
-<!-- APP SCREEN -->
 <div id="appScreen" class="hidden max-w-xl mx-auto py-8 px-4">
 
-    <!-- HEADER -->
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl mb-6 shadow">
         <div class="flex justify-between items-center">
             <h1 id="employeeName" class="text-lg font-semibold"></h1>
@@ -48,19 +44,20 @@
         </div>
     </div>
 
-    <!-- CREATE ORDER -->
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
 
-        <select id="serviceSelect" multiple>
+        <select id="serviceSelect"
                 class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500">
         </select>
-        <button id="addServiceBtn"
-    class="mt-2 bg-gray-200 px-3 py-1 rounded text-sm">
-    ➕ Добавить услугу
-</button>
 
-<div id="selectedServices"
-    class="mt-3 space-y-2 text-sm"></div>
+        <button id="addServiceBtn"
+                class="w-full bg-gray-200 hover:bg-gray-300 py-2 rounded transition">
+            ➕ Добавить услугу
+        </button>
+
+        <div id="selectedServices"
+             class="space-y-2 text-sm">
+        </div>
 
         <input id="clientName"
                class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
@@ -74,12 +71,8 @@
                 class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded transition">
             Начать услугу
         </button>
-
-        <p id="statusMsg"
-           class="text-center text-sm"></p>
     </div>
 
-    <!-- IN PROGRESS -->
     <div class="mt-8">
         <h2 class="font-semibold mb-4 text-gray-700">
             Услуги в процессе
