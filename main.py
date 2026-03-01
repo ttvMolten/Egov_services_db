@@ -143,14 +143,35 @@ def create_service(data: ServiceCreate, db: Session = Depends(get_db)):
     db.refresh(s)
     return {"id": s.id}
 
-
 @app.get("/services")
 def get_services(db: Session = Depends(get_db)):
-    services = db.query(Service).order_by(Service.id.desc()).all()
+
+    services = db.query(Service).all()
+
+    pinned_names = [
+        "Открытие ЭЦП (физическое лицо)",
+        "Открытие ЭЦП (юридическое лицо)"
+        "БМГ",
+        "Прописка"
+    ]
+
+    pinned = []
+    others = []
+
+    for s in services:
+        if s.name in pinned_names:
+            pinned.append(s)
+        else:
+            others.append(s)
+
+    # Сортируем остальные по убыванию id
+    others.sort(key=lambda x: x.id, reverse=True)
+
+    final_list = pinned + others
 
     return [
         {"id": s.id, "name": s.name, "price": s.price}
-        for s in services
+        for s in final_list
     ]
 
 # ================= ORDERS =================
