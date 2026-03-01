@@ -174,27 +174,33 @@ function closeModal() {
 
 /* ================= SEND TELEGRAM ================= */
 
-document.getElementById("sendReport").onclick = async () => {
-
-    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
-    if (!auth) return;
+document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("sendReport");
-    btn.disabled = true;
+    if (!btn) return;
 
-    const res = await fetch(
-        `${API}/admin/report/today/send?employee_id=${auth.employee_id}`,
-        { method: "POST" }
-    );
+    btn.onclick = async () => {
 
-    if (res.ok) {
-        showToast("Отчёт отправлен в Telegram");
-    } else {
-        showToast("Ошибка отправки", "error");
-    }
+        const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+        if (!auth) return;
 
-    btn.disabled = false;
-};
+        btn.disabled = true;
+
+        const res = await fetch(
+            `${API}/admin/report/today/send?employee_id=${auth.employee_id}`,
+            { method: "POST" }
+        );
+
+        if (res.ok) {
+            showToast("Отчёт отправлен в Telegram");
+        } else {
+            showToast("Ошибка отправки", "error");
+        }
+
+        btn.disabled = false;
+    };
+
+});
 
 /* ================= LOGOUT ================= */
 
