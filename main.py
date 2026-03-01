@@ -526,6 +526,28 @@ def seed_services(db: Session = Depends(get_db)):
 
     return {"status": "services added"}
 
+
+@app.post("/admin/reset/today")
+def reset_today(employee_id: int, db: Session = Depends(get_db)):
+
+    get_current_admin(employee_id, db)
+
+    start_utc, end_utc = get_local_day_range()
+
+    orders = db.query(Order).filter(
+        Order.status == "COMPLETED",
+        Order.payment_status == "PAID",
+        Order.completed_at >= start_utc,
+        Order.completed_at <= end_utc
+    ).all()
+
+    for o in orders:
+        o.status = "ARCHIVED"
+
+    db.commit()
+
+    return {"status": "today reset"}
+
 # ================= FRONTEND =================
 
 import os

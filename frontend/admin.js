@@ -201,6 +201,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 });
+document.getElementById("resetToday").onclick = async () => {
+
+    if (!confirm("Вы уверены? Это сбросит сегодняшний отчёт.")) return;
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    await fetch(
+        `${API}/admin/reset/today?employee_id=${auth.employee_id}`,
+        { method: "POST" }
+    );
+
+    showToast("День сброшен");
+    loadReport();
+};
 
 /* ================= LOGOUT ================= */
 
