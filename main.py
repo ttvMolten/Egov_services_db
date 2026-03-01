@@ -227,6 +227,7 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
     total = 0
     cash = 0
     qr = 0
+    services_count = 0
 
     message = "📊 Смена закрыта\n\n"
     message += f"👤 Сотрудник: {shift.employee.name}\n"
@@ -236,28 +237,36 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
     message += f"🕒 Смена: {start_local.strftime('%H:%M')} — {end_local.strftime('%H:%M')}\n\n"
     message += "━━━━━━━━━━━━━━\n\n"
-    services_count = 0
+
     for i, o in enumerate(orders, 1):
 
-        if not o.service:
+        if not o.services:
             continue
-        
-        order_total = sum(os.service.price for os in o.services)
-        services_count += len(o.services)
 
-    total += order_total
+        order_total = 0
 
-    if o.payment_type == "CASH":
-        cash += order_total
-    elif o.payment_type == "QR":
-        qr += order_total
+        for os in o.services:
+            if not os.service:
+                continue
 
+            price = os.service.price
+            order_total += price
+            services_count += 1
+
+        total += order_total
+
+        if o.payment_type == "CASH":
+            cash += order_total
+        elif o.payment_type == "QR":
+            qr += order_total
 
         start_time = o.created_at + timedelta(hours=5)
         end_time = o.completed_at + timedelta(hours=5)
-
         duration = int((o.completed_at - o.created_at).total_seconds() / 60)
-        services_names = ", ".join(os.service.name for os in o.services)
+
+        services_names = ", ".join(
+            os.service.name for os in o.services if os.service
+        )
 
         message += (
             f"{i}. {services_names}\n"
@@ -276,7 +285,6 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
     return {"status": "ended"}
 # ================= ADMIN REPORT =================
-
 @app.get("/admin/report/today")
 def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
 
@@ -300,12 +308,28 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
             Order.completed_at <= end_utc
         ).all()
 
-        total = sum(
-        sum(os.service.price for os in o.services)
-        for o in orders
-)
-        cash = sum(o.service.price for o in orders if o.payment_type == "CASH" and o.service)
-        qr = sum(o.service.price for o in orders if o.payment_type == "QR" and o.service)
+        total = 0
+        cash = 0
+        qr = 0
+        services_count = 0
+
+        for o in orders:
+            if not o.services:
+                continue
+
+            order_total = sum(
+                os.service.price
+                for os in o.services
+                if os.service
+            )
+
+            services_count += len(o.services)
+            total += order_total
+
+            if o.payment_type == "CASH":
+                cash += order_total
+            elif o.payment_type == "QR":
+                qr += order_total
 
         total_all += total
         cash_all += cash
@@ -314,7 +338,7 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         result.append({
             "employee_id": emp.id,
             "employee": emp.name,
-            "orders": len(orders),
+            "services_count": services_count,
             "total": total,
             "cash": cash,
             "qr": qr
@@ -359,38 +383,45 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
         emp_total = 0
         emp_cash = 0
         emp_qr = 0
+        emp_services_count = 0
 
-        for i, o in enumerate(orders, 1):
+        for o in orders:
 
-            if not o.service:
+            if not o.services:
                 continue
-
-            price = o.service.price
-            emp_total += price
-            total_all += price
-
-            if o.payment_type == "CASH":
-                emp_cash += price
-                cash_all += price
-            elif o.payment_type == "QR":
-                emp_qr += price
-                qr_all += price
 
             start_time = o.created_at + timedelta(hours=5)
             end_time = o.completed_at + timedelta(hours=5)
-
             duration = int((o.completed_at - o.created_at).total_seconds() / 60)
 
-            message += (
-                f"{i}. {o.service.name}\n"
-                f"Клиент: {o.client_name}\n"
-                f"{start_time.strftime('%H:%M')} → {end_time.strftime('%H:%M')} ({duration} мин)\n"
-                f"Оплата: {o.payment_type}\n\n"
-            )
+            for os in o.services:
+                if not os.service:
+                    continue
+
+                price = os.service.price
+                name = os.service.name
+
+                emp_total += price
+                total_all += price
+                emp_services_count += 1
+
+                if o.payment_type == "CASH":
+                    emp_cash += price
+                    cash_all += price
+                elif o.payment_type == "QR":
+                    emp_qr += price
+                    qr_all += price
+
+                message += (
+                    f"• {name}\n"
+                    f"Клиент: {o.client_name}\n"
+                    f"{start_time.strftime('%H:%M')} → {end_time.strftime('%H:%M')} ({duration} мин)\n"
+                    f"Оплата: {o.payment_type}\n\n"
+                )
 
         message += (
             f"Итого по {emp.name}:\n"
-            f"Услуг: {len(orders)}\n"
+            f"Услуг: {emp_services_count}\n"
             f"Сумма: {emp_total} ₸\n"
             f"Нал: {emp_cash} ₸\n"
             f"QR: {emp_qr} ₸\n"
