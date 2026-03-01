@@ -361,10 +361,10 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
 
         orders = db.query(Order).filter(
             Order.employee_id == emp.id,
-            Order.status == "COMPLETED",
-            Order.payment_status == "PAID",
-            Order.completed_at >= start_utc,
-            Order.completed_at <= end_utc
+            # Order.status == "COMPLETED",
+            # Order.payment_status == "PAID",
+            # Order.completed_at >= start_utc,
+            # Order.completed_at <= end_utc
         ).all()
 
         if not orders:
