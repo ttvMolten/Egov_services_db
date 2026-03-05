@@ -6,8 +6,8 @@ load_dotenv()
 
 def send_telegram(message):
 
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    bot_token = os.getenv("8277761571:AAHasO2cEYdNMGGFJErVDOTgI2UrkWo62ws")
+    chat_id = os.getenv("-5034516562")
 
     if not bot_token or not chat_id:
         print("TELEGRAM ERROR: TOKEN OR CHAT_ID MISSING")
