@@ -174,6 +174,19 @@ def get_services(db: Session = Depends(get_db)):
         for s in final_list
     ]
 
+@app.delete("/services/{service_id}")
+def delete_service(service_id: int, db: Session = Depends(get_db)):
+
+    service = db.query(Service).filter(Service.id == service_id).first()
+
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    db.delete(service)
+    db.commit()
+
+    return {"status": "service deleted"}
+
 # ================= ORDERS =================
 
 @app.post("/orders/start")
