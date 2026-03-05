@@ -112,12 +112,8 @@ addServiceBtn.onclick = () => {
 
     if (!serviceId) return;
 
-    if (selectedServices.includes(serviceId)) {
-        showToast("Услуга уже добавлена", "error");
-        return;
-    }
-
     selectedServices.push(serviceId);
+
     renderSelectedServices();
 };
 
