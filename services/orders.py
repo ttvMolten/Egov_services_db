@@ -11,7 +11,7 @@ def start_order(db: Session, data):
     else:
         service_ids = [data.service_id]
 
-    # Проверяем сотрудника
+    # Проверяем сотрудник
     employee = db.query(Employee).filter(Employee.id == data.employee_id).first()
 
     if not employee or not employee.is_active:
