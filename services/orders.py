@@ -26,10 +26,10 @@ def start_order(db: Session, data):
     if not active_shift:
         return {"error": "No active shift"}
 
-    # Проверяем услуги
-    services = db.query(Service).filter(Service.id.in_(service_ids)).all()
+    # 🔥 Проверяем что услуги существуют (без проверки длины)
+    services = db.query(Service).filter(Service.id.in_(set(service_ids))).all()
 
-    if not services or len(services) != len(service_ids):
+    if not services:
         return {"error": "Invalid services"}
 
     # 🔥 Первая услуга — в Order (для совместимости)
@@ -49,11 +49,11 @@ def start_order(db: Session, data):
     db.commit()
     db.refresh(order)
 
-    # 🔥 Если услуг больше одной — добавляем в связующую таблицу
-    for service in services:
+    # 🔥 Добавляем услуги (учитывая дубликаты)
+    for service_id in service_ids:
         order_service = OrderService(
             order_id=order.id,
-            service_id=service.id
+            service_id=service_id
         )
         db.add(order_service)
 
