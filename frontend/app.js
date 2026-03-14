@@ -247,8 +247,9 @@ async function loadInProgress() {
                     📱 QR
                 </button>
 
-                <button onclick="completeOrder(order.id, 'TRANSFER')">
-                    Перевод
+                <button class="flex-1 bg-purple-600 text-white py-2 rounded"
+                  onclick="completeOrder(${o.order_id}, 'TRANSFER')">
+                 💳 Перевод
                 </button>
 
                 <button class="flex-1 bg-red-600 text-white py-2 rounded"
