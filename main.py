@@ -292,6 +292,8 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
             cash += order_total
         elif o.payment_type == "QR":
             qr += order_total
+        elif o.payment_type == "TRANSFER":
+             transfer += order_total
 
         services_names = ", ".join(
             os.service.name for os in o.services if os.service
@@ -358,10 +360,13 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
                 cash += order_total
             elif o.payment_type == "QR":
                 qr += order_total
+            elif o.payment_type == "TRANSFER":
+                transfer += order_total
 
         total_all += total
         cash_all += cash
         qr_all += qr
+        transfer_all += transfer
 
         result.append({
             "employee_id": emp.id,
@@ -411,6 +416,7 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
         emp_total = 0
         emp_cash = 0
         emp_qr = 0
+        emp_transfer = 0
         emp_services_count = 0
 
         for o in orders:
@@ -439,6 +445,8 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
                 elif o.payment_type == "QR":
                     emp_qr += price
                     qr_all += price
+                elif o.payment_type == "TRANSFER":
+                     emp_transfer += price
 
                 message += (
                     f"• {name}\n"

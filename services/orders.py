@@ -61,24 +61,30 @@ def start_order(db: Session, data):
 
     return {"order_id": order.id}
 
-
 def complete_order(db: Session, order_id: int, payment_type: str):
+
+    # допустимые типы оплаты
+    ALLOWED_PAYMENTS = ["CASH", "QR", "TRANSFER"]
 
     order = db.query(Order).filter(Order.id == order_id).first()
 
     if not order or order.status != "IN_PROGRESS":
         return {"error": "Invalid order"}
 
+    payment_type = payment_type.upper()
+
+    # проверка типа оплаты
+    if payment_type not in ALLOWED_PAYMENTS:
+        return {"error": "Invalid payment type"}
+
     order.status = "COMPLETED"
     order.payment_status = "PAID"
-    order.payment_type = payment_type.upper()
+    order.payment_type = payment_type
     order.completed_at = datetime.datetime.utcnow()
 
     db.commit()
 
     return {"status": "completed"}
-
-
 def not_provided(db: Session, order_id: int, reason: str):
 
     order = db.query(Order).filter(Order.id == order_id).first()
