@@ -96,7 +96,8 @@ async function loadReport() {
             <td class="p-3 text-center">${emp.total} ₸</td>
             <td class="p-3 text-center">${emp.cash} ₸</td>
             <td class="p-3 text-center">${emp.qr} ₸</td>
-        `;
+            <td class="p-3 text-center">${emp.transfer} ₸</td>
+            `;
 
         table.appendChild(row);
     });
@@ -106,6 +107,7 @@ async function loadReport() {
             💰 Общая касса: ${data.total_all} ₸ <br>
             <span class="text-green-600">Нал: ${data.cash_all} ₸</span> |
             <span class="text-blue-600">QR: ${data.qr_all} ₸</span>
+            <span class="text-blue-600">Перевод: ${data.transfer_all} ₸</span>
         </div>
     `;
 }

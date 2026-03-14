@@ -265,6 +265,7 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
     total = 0
     cash = 0
     qr = 0
+    transfer = 0
     services_count = 0
 
     message = "📊 Смена закрыта\n\n"
@@ -293,7 +294,7 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
         elif o.payment_type == "QR":
             qr += order_total
         elif o.payment_type == "TRANSFER":
-             transfer += order_total
+            transfer += order_total
 
         services_names = ", ".join(
             os.service.name for os in o.services if os.service
@@ -309,7 +310,8 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
     message += f"Услуг: {services_count}\n"
     message += f"💰 Сумма: {total} ₸\n"
     message += f"Нал: {cash} ₸\n"
-    message += f"QR: {qr} ₸"
+    message += f"QR: {qr} ₸\n"
+    message += f"Перевод: {transfer} ₸"
 
     send_telegram(message)
 
@@ -327,6 +329,7 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
     total_all = 0
     cash_all = 0
     qr_all = 0
+    transfer_all = 0
 
     for emp in employees:
 
@@ -341,6 +344,7 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         total = 0
         cash = 0
         qr = 0
+        transfer = 0
         services_count = 0
 
         for o in orders:
@@ -374,7 +378,8 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
             "services_count": services_count,
             "total": total,
             "cash": cash,
-            "qr": qr
+            "qr": qr,
+            "transfer": transfer
         })
 
     return {
@@ -382,7 +387,8 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         "employees": result,
         "total_all": total_all,
         "cash_all": cash_all,
-        "qr_all": qr_all
+        "qr_all": qr_all,
+        "transfer_all": transfer_all
     }
 @app.post("/admin/report/today/send")
 def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
@@ -397,6 +403,7 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
     total_all = 0
     cash_all = 0
     qr_all = 0
+    transfer_all = 0
 
     for emp in employees:
 
@@ -442,11 +449,14 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
                 if o.payment_type == "CASH":
                     emp_cash += price
                     cash_all += price
+
                 elif o.payment_type == "QR":
                     emp_qr += price
                     qr_all += price
+
                 elif o.payment_type == "TRANSFER":
-                     emp_transfer += price
+                    emp_transfer += price
+                    transfer_all += price
 
                 message += (
                     f"• {name}\n"
@@ -461,6 +471,7 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
             f"Сумма: {emp_total} ₸\n"
             f"Нал: {emp_cash} ₸\n"
             f"QR: {emp_qr} ₸\n"
+            f"Перевод: {emp_transfer} ₸\n"
         )
 
         message += "\n━━━━━━━━━━━━━━\n\n"
@@ -469,7 +480,8 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
         f"💰 Общий итог:\n"
         f"Сумма: {total_all} ₸\n"
         f"Нал: {cash_all} ₸\n"
-        f"QR: {qr_all} ₸"
+        f"QR: {qr_all} ₸\n"
+        f"Перевод: {transfer_all} ₸"
     )
 
     send_telegram(message)
