@@ -248,7 +248,7 @@ function renderReport(data) {
 
         row.innerHTML = `
             <td class="p-3 font-semibold text-blue-600">${emp.employee}</td>
-            <td class="p-3 text-center">${emp.services_count}</td>
+           <td class="p-3 text-center">${emp.services || emp.services_count}</td>
             <td class="p-3 text-center">${emp.total} ₸</td>
             <td class="p-3 text-center">${emp.cash} ₸</td>
             <td class="p-3 text-center">${emp.qr} ₸</td>
