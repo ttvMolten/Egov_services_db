@@ -237,6 +237,36 @@ async function loadPeriodReport() {
 
     renderReport(data);
 }
+function renderReport(data) {
+
+    const table = document.getElementById("reportTable");
+    table.innerHTML = "";
+
+    data.employees.forEach(emp => {
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td class="p-3 font-semibold text-blue-600">${emp.employee}</td>
+            <td class="p-3 text-center">${emp.services_count}</td>
+            <td class="p-3 text-center">${emp.total} ₸</td>
+            <td class="p-3 text-center">${emp.cash} ₸</td>
+            <td class="p-3 text-center">${emp.qr} ₸</td>
+            <td class="p-3 text-center">${emp.transfer || 0} ₸</td>
+        `;
+
+        table.appendChild(row);
+    });
+
+    document.getElementById("totalBox").innerHTML = `
+        <div class="mt-4 p-4 bg-gray-100 rounded-xl text-lg font-semibold">
+            💰 Общая касса: ${data.total_all} ₸ <br>
+            <span class="text-green-600">Нал: ${data.cash_all} ₸</span> |
+            <span class="text-blue-600">QR: ${data.qr_all} ₸</span> |
+            <span class="text-purple-600">Перевод: ${data.transfer_all || 0} ₸</span>
+        </div>
+    `;
+}
 
 /* ================= LOGOUT ================= */
 
