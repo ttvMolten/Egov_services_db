@@ -390,6 +390,90 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         "qr_all": qr_all,
         "transfer_all": transfer_all
     }
+
+from datetime import datetime
+
+@app.get("/admin/report/period")
+def admin_report_period(
+    employee_id: int,
+    start_date: str,
+    end_date: str,
+    db: Session = Depends(get_db)
+):
+
+    get_current_admin(employee_id, db)
+
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+
+    employees = db.query(Employee).all()
+
+    result = []
+    total_all = 0
+    cash_all = 0
+    qr_all = 0
+    transfer_all = 0
+
+    for emp in employees:
+
+        orders = db.query(Order).filter(
+            Order.employee_id == emp.id,
+            Order.status == "COMPLETED",
+            Order.payment_status == "PAID",
+            Order.completed_at >= start,
+            Order.completed_at <= end
+        ).all()
+
+        total = 0
+        cash = 0
+        qr = 0
+        transfer = 0
+        services_count = 0
+
+        for o in orders:
+
+            if not o.services:
+                continue
+
+            order_total = sum(
+                os.service.price
+                for os in o.services
+                if os.service
+            )
+
+            services_count += len(o.services)
+            total += order_total
+
+            if o.payment_type == "CASH":
+                cash += order_total
+            elif o.payment_type == "QR":
+                qr += order_total
+            elif o.payment_type == "TRANSFER":
+                transfer += order_total
+
+        total_all += total
+        cash_all += cash
+        qr_all += qr
+        transfer_all += transfer
+
+        result.append({
+            "employee": emp.name,
+            "services": services_count,
+            "total": total,
+            "cash": cash,
+            "qr": qr,
+            "transfer": transfer
+        })
+
+    return {
+        "start": start_date,
+        "end": end_date,
+        "employees": result,
+        "total_all": total_all,
+        "cash_all": cash_all,
+        "qr_all": qr_all,
+        "transfer_all": transfer_all
+    }
 @app.post("/admin/report/today/send")
 def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
 
@@ -584,6 +668,8 @@ def reset_today(employee_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"status": "today reset"}
+
+
 
 # ================= FRONTEND =================
 

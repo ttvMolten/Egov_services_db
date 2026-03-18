@@ -217,6 +217,26 @@ document.getElementById("resetToday").onclick = async () => {
     showToast("День сброшен");
     loadReport();
 };
+async function loadPeriodReport() {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+
+    if (!start || !end) {
+        showToast("Выбери даты", "error");
+        return;
+    }
+
+    const res = await fetch(
+        `${API}/admin/report/period?employee_id=${auth.employee_id}&start_date=${start}&end_date=${end}`
+    );
+
+    const data = await res.json();
+
+    renderReport(data);
+}
 
 /* ================= LOGOUT ================= */
 

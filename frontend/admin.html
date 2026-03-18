@@ -65,7 +65,20 @@
 class="bg-red-600 text-white px-4 py-2 rounded">
 Сбросить день
 </button>
+  <div class="flex gap-2 mb-4">
 
+    <input type="date" id="startDate"
+        class="border px-3 py-2 rounded">
+
+    <input type="date" id="endDate"
+        class="border px-3 py-2 rounded">
+
+    <button onclick="loadPeriodReport()"
+        class="bg-blue-600 text-white px-4 py-2 rounded">
+        Показать
+    </button>
+
+</div>
     <!-- Totals -->
     <div id="totalBox"
         class="mt-6 p-4 bg-gray-100 rounded-xl text-lg font-semibold text-gray-800">
