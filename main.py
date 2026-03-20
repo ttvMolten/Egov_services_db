@@ -403,9 +403,13 @@ def admin_report_period(
 
     get_current_admin(employee_id, db)
 
+    from datetime import timedelta
+
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)
 
+    start_utc = start - timedelta(hours=5)
+    end_utc = end + timedelta(days=1) - timedelta(seconds=1) - timedelta(hours=5)
     employees = db.query(Employee).all()
 
     result = []
@@ -420,8 +424,8 @@ def admin_report_period(
             Order.employee_id == emp.id,
             Order.status == "COMPLETED",
             Order.payment_status == "PAID",
-            Order.completed_at >= start,
-            Order.completed_at <= end
+            Order.completed_at >= start_utc,
+            Order.completed_at <= end_utc
         ).all()
 
         total = 0
