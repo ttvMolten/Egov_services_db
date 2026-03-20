@@ -87,6 +87,8 @@ function showApp() {
 
     loadServices();
     loadInProgress();
+    loadTodayStats(); // 🔥 добавили сюда
+    loadNotes();      // 🔥 и сюда
 }
 
 /* ================= SERVICES ================= */
@@ -109,11 +111,9 @@ async function loadServices() {
 
 addServiceBtn.onclick = () => {
     const serviceId = Number(serviceSelect.value);
-
     if (!serviceId) return;
 
     selectedServices.push(serviceId);
-
     renderSelectedServices();
 };
 
@@ -163,8 +163,6 @@ startBtn.onclick = async () => {
         return;
     }
 
-    console.log("Sending services:", selectedServices);
-
     startBtn.disabled = true;
 
     const res = await fetch(`${API}/orders/start`, {
@@ -190,6 +188,7 @@ startBtn.onclick = async () => {
         renderSelectedServices();
 
         loadInProgress();
+        loadTodayStats(); // 🔥 обновляем статистику
     } else {
         showToast(data.error || "Ошибка", "error");
     }
@@ -217,13 +216,11 @@ async function loadInProgress() {
 
     orders.forEach(o => {
 
-        const servicesText = o.services
-            ? o.services.join(", ")
-            : "";
+        const servicesText = o.services ? o.services.join(", ") : "";
 
         const card = document.createElement("div");
         card.className =
-            "bg-white p-4 rounded-xl shadow space-y-3";
+            "bg-white p-4 rounded-2xl shadow border border-gray-100 space-y-3";
 
         card.innerHTML = `
             <div class="flex justify-between">
@@ -237,22 +234,22 @@ async function loadInProgress() {
             </div>
 
             <div class="flex gap-2">
-                <button class="flex-1 bg-green-600 text-white py-2 rounded"
+                <button class="flex-1 bg-green-600 text-white py-2 rounded-xl"
                     onclick="completeOrder(${o.order_id}, 'CASH')">
                     💵 Нал
                 </button>
 
-                <button class="flex-1 bg-blue-600 text-white py-2 rounded"
+                <button class="flex-1 bg-blue-600 text-white py-2 rounded-xl"
                     onclick="completeOrder(${o.order_id}, 'QR')">
                     📱 QR
                 </button>
 
-                <button class="flex-1 bg-purple-600 text-white py-2 rounded"
+                <button class="flex-1 bg-purple-600 text-white py-2 rounded-xl"
                   onclick="completeOrder(${o.order_id}, 'TRANSFER')">
                  💳 Перевод
                 </button>
 
-                <button class="flex-1 bg-red-600 text-white py-2 rounded"
+                <button class="flex-1 bg-red-600 text-white py-2 rounded-xl"
                     onclick="failOrder(${o.order_id})">
                     ❌ Не оказана
                 </button>
@@ -262,8 +259,6 @@ async function loadInProgress() {
         inProgressList.appendChild(card);
     });
 }
-
-
 
 /* ================= COMPLETE ================= */
 
@@ -279,6 +274,7 @@ async function completeOrder(orderId, type) {
 
     showToast("Услуга завершена");
     loadInProgress();
+    loadTodayStats(); // 🔥 обновляем
 }
 
 /* ================= FAIL ================= */
@@ -296,11 +292,15 @@ async function failOrder(orderId) {
 
     showToast("Отмечено как не оказано", "error");
     loadInProgress();
+    loadTodayStats(); // 🔥 обновляем
 }
+
+/* ================= TODAY STATS ================= */
 
 async function loadTodayStats() {
 
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+    if (!auth) return;
 
     const res = await fetch(
         `${API}/employee/today-stats?employee_id=${auth.employee_id}`
@@ -309,21 +309,18 @@ async function loadTodayStats() {
     const data = await res.json();
 
     document.getElementById("todayStats").innerHTML = `
-        <div class="text-lg font-semibold">
-            📊 Сегодня:
-        </div>
-        <div class="text-xl">
-            Услуг: ${data.services_count}
-        </div>
-        <div class="text-green-600 font-bold">
-            ${data.total} ₸
-        </div>
+        <div class="text-lg opacity-80">📊 Сегодня</div>
+        <div class="text-2xl font-bold">${data.services_count} услуг</div>
+        <div class="text-xl mt-1">${data.total} ₸</div>
     `;
 }
+
+/* ================= NOTES ================= */
 
 async function loadNotes() {
 
     const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+    if (!auth) return;
 
     const res = await fetch(
         `${API}/employee/notes?employee_id=${auth.employee_id}`
@@ -333,7 +330,6 @@ async function loadNotes() {
 
     document.getElementById("notes").value = data.notes;
 }
-
 
 async function saveNotes() {
 
@@ -351,6 +347,7 @@ async function saveNotes() {
 
     showToast("Сохранено");
 }
+
 /* ================= LOGOUT ================= */
 
 logoutBtn.onclick = async () => {
@@ -376,6 +373,7 @@ if (localStorage.getItem(AUTH_KEY)) {
     showApp();
 }
 
-setInterval(loadInProgress, 60000);
-loadTodayStats();
-loadNotes();
+setInterval(() => {
+    loadInProgress();
+    loadTodayStats();
+}, 60000);

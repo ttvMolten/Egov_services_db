@@ -6,24 +6,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
 
+<!-- TOAST -->
 <div id="toast"
      class="fixed top-5 right-5 bg-black text-white px-6 py-3 rounded-xl shadow-lg hidden z-50">
 </div>
 
+<!-- PIN SCREEN -->
 <div id="pinScreen" class="flex items-center justify-center h-screen">
-    <div class="bg-white p-6 rounded-xl shadow w-80">
-        <h2 class="text-xl font-semibold mb-4 text-center">
-            Вход в систему
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-80 border border-gray-100">
+        <h2 class="text-xl font-semibold mb-4 text-center text-gray-800">
+            🔐 Вход в систему
         </h2>
 
         <input id="pinInput" type="password"
-               class="w-full border rounded px-3 py-2 mb-3"
-               placeholder="PIN" />
+               class="w-full border-2 border-gray-200 rounded px-3 py-2 mb-3 focus:border-blue-500 outline-none"
+               placeholder="Введите PIN" />
 
         <button id="pinBtn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition">
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition shadow">
             Войти
         </button>
 
@@ -32,65 +34,76 @@
     </div>
 </div>
 
-<div id="appScreen" class="hidden max-w-xl mx-auto py-8 px-4">
+<!-- MAIN APP -->
+<div id="appScreen" class="hidden max-w-xl mx-auto py-8 px-4 space-y-6">
 
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl mb-6 shadow">
+    <!-- HEADER -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 rounded-2xl shadow-lg">
         <div class="flex justify-between items-center">
             <h1 id="employeeName" class="text-lg font-semibold"></h1>
             <button id="logoutBtn"
-                    class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition">
+                    class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-sm transition shadow">
                 Закрыть смену
             </button>
         </div>
     </div>
-    
-    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+    <!-- CREATE ORDER -->
+    <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 space-y-4">
         
         <select id="serviceSelect"
-        class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500">
-    </select>
-    
-    <button id="addServiceBtn"
-    class="w-full bg-gray-200 hover:bg-gray-300 py-2 rounded transition">
-    ➕ Добавить услугу
-</button>
+        class="w-full border-2 border-gray-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </select>
+        
+        <button id="addServiceBtn"
+        class="w-full bg-gray-100 hover:bg-gray-200 py-2 rounded-xl transition">
+        ➕ Добавить услугу
+        </button>
 
-<div id="selectedServices"
-class="space-y-2 text-sm">
-</div>
+        <div id="selectedServices"
+        class="space-y-2 text-sm">
+        </div>
 
-<input id="clientName"
-class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
-placeholder="Имя клиента"/>
+        <input id="clientName"
+        class="w-full border-2 border-gray-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+        placeholder="Имя клиента"/>
 
-<input id="clientPhone"
-class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
-placeholder="Телефон клиента"/>
+        <input id="clientPhone"
+        class="w-full border-2 border-gray-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+        placeholder="Телефон клиента"/>
 
-<button id="startBtn"
-class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded transition">
-Начать услугу
-</button>
-</div>
+        <button id="startBtn"
+        class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl transition shadow">
+        🚀 Начать услугу
+        </button>
+    </div>
 
-<div class="mt-8">
-    <h2 class="font-semibold mb-4 text-gray-700">
-        Услуги в процессе
-    </h2>
-    <div id="inProgressList" class="space-y-3"></div>
-</div>
-<div id="todayStats"
-class="bg-white p-4 rounded-xl shadow mb-4 text-center">
-</div>
+    <!-- IN PROGRESS -->
+    <div>
+        <h2 class="font-semibold mb-4 text-gray-700">
+            Услуги в процессе
+        </h2>
+        <div id="inProgressList" class="space-y-3"></div>
+    </div>
 
-<textarea id="notes"
-    class="w-full border rounded p-3 mt-4"
-    placeholder="Заметки..."></textarea>
+    <!-- TODAY STATS -->
+    <div id="todayStats"
+    class="bg-gradient-to-r from-indigo-500 to-blue-600 text-white p-5 rounded-2xl shadow-lg text-center">
+    </div>
 
-<button onclick="saveNotes()"
-    class="bg-blue-600 text-white px-4 py-2 mt-2 rounded">
-    Сохранить
-</button>
+    <!-- NOTES -->
+    <div class="bg-white p-5 rounded-2xl shadow-xl border border-gray-100">
+        <h3 class="font-semibold text-gray-700 mb-2">📝 Заметки</h3>
+
+        <textarea id="notes"
+            class="w-full border-2 border-blue-200 focus:border-blue-500 rounded-xl p-3 outline-none"
+            placeholder="Напиши что важно не забыть..."></textarea>
+
+        <button onclick="saveNotes()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 mt-3 rounded-xl shadow transition w-full">
+            💾 Сохранить
+        </button>
+    </div>
 
 </div>
 
