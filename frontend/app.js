@@ -310,10 +310,13 @@ async function loadTodayStats() {
     const data = await res.json();
 
     document.getElementById("todayStats").innerHTML = `
-        <div class="text-lg opacity-80">📊 Сегодня</div>
-        <div class="text-2xl font-bold">${data.services_count} услуг</div>
-        <div class="text-xl mt-1">${data.total} ₸</div>
-    `;
+    <div class="text-lg font-semibold">
+        📊 Сегодня
+    </div>
+    <div class="text-2xl font-bold">
+        ${data.services_count} услуг
+    </div>
+`;
 }
 
 
