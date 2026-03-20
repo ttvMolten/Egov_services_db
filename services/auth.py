@@ -6,18 +6,20 @@ from datetime import datetime
 
 def login_by_pin(db: Session, pin: str):
 
-    pin = pin.strip()  # убираем пробелы
+    pin = str(pin).strip()  # 🔥 нормализация
 
-    print("Введён PIN:", pin)
+    print("Введён PIN:", pin, type(pin))
 
     employees = db.query(Employee).all()
 
     employee = None
 
     for e in employees:
-        print("DB:", e.id, e.name, e.pin, e.is_active)
+        db_pin = str(e.pin).strip() if e.pin is not None else ""
 
-        if str(e.pin) == pin and e.is_active:
+        print("DB:", e.id, e.name, db_pin, type(e.pin), e.is_active)
+
+        if db_pin == pin and e.is_active:
             employee = e
             break
 
