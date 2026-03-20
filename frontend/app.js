@@ -89,7 +89,6 @@ function showApp() {
     loadServices();
     loadInProgress();
     loadTodayStats(); // 🔥 добавили сюда
-    loadNotes();      // 🔥 и сюда
     loadHistory();
 }
 
