@@ -109,7 +109,7 @@ def create_employee(data: EmployeeCreate, db: Session = Depends(get_db)):
 
 @app.get("/employees")
 def get_employees(db: Session = Depends(get_db)):
-    employees = db.query(Employee).all()
+    employees = db.query(Employee).filter(Employee.is_active == True).all()
     return [
         {
             "id": e.id,
@@ -323,7 +323,7 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
     get_current_admin(employee_id, db)
 
     start_utc, end_utc = get_local_day_range()
-    employees = db.query(Employee).all()
+    employees = db.query(Employee).filter(Employee.is_active == True).all()
 
     result = []
     total_all = 0
@@ -410,7 +410,7 @@ def admin_report_period(
 
     start_utc = start - timedelta(hours=5)
     end_utc = end + timedelta(days=1) - timedelta(seconds=1) - timedelta(hours=5)
-    employees = db.query(Employee).all()
+    employees = db.query(Employee).filter(Employee.is_active == True).all()
 
     result = []
     total_all = 0
@@ -484,7 +484,7 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
     get_current_admin(employee_id, db)
 
     start_utc, end_utc = get_local_day_range()
-    employees = db.query(Employee).all()
+    employees = db.query(Employee).filter(Employee.is_active == True).all()
 
     message = "📊 Подробный отчёт за сегодня\n\n"
 
@@ -674,6 +674,18 @@ def reset_today(employee_id: int, db: Session = Depends(get_db)):
     return {"status": "today reset"}
 
 
+@app.post("/employees/{id}/deactivate")
+def deactivate_employee(id: int, db: Session = Depends(get_db)):
+
+    employee = db.query(Employee).filter(Employee.id == id).first()
+
+    if not employee:
+        return {"error": "Employee not found"}
+
+    employee.is_active = False
+    db.commit()
+
+    return {"status": "deactivated"}
 
 # ================= FRONTEND =================
 

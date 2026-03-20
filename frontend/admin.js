@@ -91,13 +91,20 @@ async function loadReport() {
         });
 
         row.innerHTML = `
-            <td class="p-3 font-semibold text-blue-600">${emp.employee}</td>
-            <td class="p-3 text-center">${emp.services_count}</td>
-            <td class="p-3 text-center">${emp.total} ₸</td>
-            <td class="p-3 text-center">${emp.cash} ₸</td>
-            <td class="p-3 text-center">${emp.qr} ₸</td>
-            <td class="p-3 text-center">${emp.transfer} ₸</td>
-            `;
+    <td class="p-3 font-semibold text-blue-600">${emp.employee}</td>
+    <td class="p-3 text-center">${emp.services_count}</td>
+    <td class="p-3 text-center">${emp.total} ₸</td>
+    <td class="p-3 text-center">${emp.cash} ₸</td>
+    <td class="p-3 text-center">${emp.qr} ₸</td>
+    <td class="p-3 text-center">${emp.transfer} ₸</td>
+
+    <td class="p-3 text-center">
+        <button onclick="deactivateEmployee(${emp.employee_id})"
+            class="bg-red-500 text-white px-3 py-1 rounded">
+            Уволить
+        </button>
+    </td>
+`;
 
         table.appendChild(row);
     });
@@ -268,6 +275,21 @@ function renderReport(data) {
     `;
 }
 
+async function deactivateEmployee(id) {
+
+    if (!confirm("Уволить сотрудника?")) return;
+
+    const res = await fetch(`${API}/employees/${id}/deactivate`, {
+        method: "POST"
+    });
+
+    if (res.ok) {
+        showToast("Сотрудник уволен");
+        loadEmployees(); // обновить список
+    } else {
+        showToast("Ошибка", "error");
+    }
+}
 /* ================= LOGOUT ================= */
 
 document.getElementById("logoutBtn").onclick = () => {
