@@ -163,26 +163,6 @@ def employee_today_stats(employee_id: int, db: Session = Depends(get_db)):
     }
 
 
-@app.get("/employee/notes")
-def get_notes(employee_id: int, db: Session = Depends(get_db)):
-
-    emp = db.query(Employee).filter(Employee.id == employee_id).first()
-
-    return {"notes": emp.notes or ""}
-
-
-@app.post("/employee/notes")
-def save_notes(data: dict, db: Session = Depends(get_db)):
-
-    emp = db.query(Employee).filter(Employee.id == data["employee_id"]).first()
-
-    if not emp:
-        return {"error": "Not found"}
-
-    emp.notes = data["text"]
-    db.commit()
-
-    return {"status": "saved"}
 # ================= SERVICES =================
 
 @app.post("/services")

@@ -315,38 +315,6 @@ async function loadTodayStats() {
     `;
 }
 
-/* ================= NOTES ================= */
-
-async function loadNotes() {
-
-    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
-    if (!auth) return;
-
-    const res = await fetch(
-        `${API}/employee/notes?employee_id=${auth.employee_id}`
-    );
-
-    const data = await res.json();
-
-    document.getElementById("notes").value = data.notes;
-}
-
-async function saveNotes() {
-
-    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
-    const text = document.getElementById("notes").value;
-
-    await fetch(`${API}/employee/notes`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            employee_id: auth.employee_id,
-            text: text
-        })
-    });
-
-    showToast("Сохранено");
-}
 
 /* ================= LOGOUT ================= */
 
