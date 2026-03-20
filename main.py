@@ -162,6 +162,29 @@ def employee_today_stats(employee_id: int, db: Session = Depends(get_db)):
         "total": total
     }
 
+@app.get("/employee/history")
+def employee_history(employee_id: int, db: Session = Depends(get_db)):
+
+    start_utc, end_utc = get_local_day_range()
+
+    orders = db.query(Order).filter(
+        Order.employee_id == employee_id,
+        Order.status == "COMPLETED",
+        Order.completed_at >= start_utc,
+        Order.completed_at <= end_utc
+    ).order_by(Order.completed_at.desc()).limit(20).all()
+
+    result = []
+
+    for o in orders:
+        for os in o.services:
+            if os.service:
+                result.append({
+                    "client": o.client_name,
+                    "service": os.service.name
+                })
+
+    return result
 
 # ================= SERVICES =================
 

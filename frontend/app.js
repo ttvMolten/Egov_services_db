@@ -72,6 +72,7 @@ async function loginByPin() {
 
     localStorage.setItem(AUTH_KEY, JSON.stringify(data));
     showApp();
+    
 }
 
 /* ================= SHOW APP ================= */
@@ -89,6 +90,7 @@ function showApp() {
     loadInProgress();
     loadTodayStats(); // 🔥 добавили сюда
     loadNotes();      // 🔥 и сюда
+    loadHistory();
 }
 
 /* ================= SERVICES ================= */
@@ -332,6 +334,39 @@ logoutBtn.onclick = async () => {
     localStorage.removeItem(AUTH_KEY);
     location.reload();
 };
+async function loadHistory() {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+    if (!auth) return;
+
+    const res = await fetch(
+        `${API}/employee/history?employee_id=${auth.employee_id}`
+    );
+
+    const data = await res.json();
+
+    const container = document.getElementById("historyList");
+    container.innerHTML = "";
+
+    if (!data.length) {
+        container.innerHTML = `<p class="text-gray-400">Нет истории</p>`;
+        return;
+    }
+
+    data.forEach(item => {
+
+        const div = document.createElement("div");
+
+        div.className = "border-b pb-1";
+
+        div.innerHTML = `
+            <div class="font-medium">${item.service}</div>
+            <div class="text-xs text-gray-500">${item.client}</div>
+        `;
+
+        container.appendChild(div);
+    });
+}
 
 /* ================= INIT ================= */
 
@@ -342,6 +377,7 @@ if (localStorage.getItem(AUTH_KEY)) {
 }
 
 setInterval(() => {
+    setInterval(loadHistory, 60000);
     loadInProgress();
     loadTodayStats();
 }, 60000);
