@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from models import Employee, Shift
@@ -7,14 +6,17 @@ from datetime import datetime
 
 def login_by_pin(db: Session, pin: str):
 
-    # Ищем сотрудника
+    # Ищем сотрудника (БЕЗ фильтра is_active, чтобы различать ошибки)
     employee = db.query(Employee).filter(
-        Employee.pin == pin,
-        Employee.is_active == True
+        Employee.pin == pin
     ).first()
 
     if not employee:
         raise HTTPException(status_code=401, detail="Неверный PIN")
+
+    # 🔥 Проверка активности (ВАЖНО)
+    if not employee.is_active:
+        raise HTTPException(status_code=403, detail="Сотрудник уволен")
 
     # Проверяем активную смену
     active_shift = db.query(Shift).filter(
