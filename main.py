@@ -133,6 +133,56 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"status": "deleted"}
+
+
+@app.get("/employee/today-stats")
+def employee_today_stats(employee_id: int, db: Session = Depends(get_db)):
+
+    start_utc, end_utc = get_local_day_range()
+
+    orders = db.query(Order).filter(
+        Order.employee_id == employee_id,
+        Order.status == "COMPLETED",
+        Order.payment_status == "PAID",
+        Order.completed_at >= start_utc,
+        Order.completed_at <= end_utc
+    ).all()
+
+    services_count = 0
+    total = 0
+
+    for o in orders:
+        for os in o.services:
+            if os.service:
+                services_count += 1
+                total += os.service.price
+
+    return {
+        "services_count": services_count,
+        "total": total
+    }
+
+
+@app.get("/employee/notes")
+def get_notes(employee_id: int, db: Session = Depends(get_db)):
+
+    emp = db.query(Employee).filter(Employee.id == employee_id).first()
+
+    return {"notes": emp.notes or ""}
+
+
+@app.post("/employee/notes")
+def save_notes(data: dict, db: Session = Depends(get_db)):
+
+    emp = db.query(Employee).filter(Employee.id == data["employee_id"]).first()
+
+    if not emp:
+        return {"error": "Not found"}
+
+    emp.notes = data["text"]
+    db.commit()
+
+    return {"status": "saved"}
 # ================= SERVICES =================
 
 @app.post("/services")

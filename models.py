@@ -15,6 +15,7 @@ class Employee(Base):
     role = Column(String, default="EMPLOYEE", nullable=False)
     branch_id = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True)
+    notes = Column(String, nullable=True)
 
     orders = relationship("Order", back_populates="employee")
     shifts = relationship("Shift", back_populates="employee")

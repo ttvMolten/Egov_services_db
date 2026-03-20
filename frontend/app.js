@@ -263,6 +263,8 @@ async function loadInProgress() {
     });
 }
 
+
+
 /* ================= COMPLETE ================= */
 
 async function completeOrder(orderId, type) {
@@ -296,6 +298,59 @@ async function failOrder(orderId) {
     loadInProgress();
 }
 
+async function loadTodayStats() {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    const res = await fetch(
+        `${API}/employee/today-stats?employee_id=${auth.employee_id}`
+    );
+
+    const data = await res.json();
+
+    document.getElementById("todayStats").innerHTML = `
+        <div class="text-lg font-semibold">
+            📊 Сегодня:
+        </div>
+        <div class="text-xl">
+            Услуг: ${data.services_count}
+        </div>
+        <div class="text-green-600 font-bold">
+            ${data.total} ₸
+        </div>
+    `;
+}
+
+async function loadNotes() {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    const res = await fetch(
+        `${API}/employee/notes?employee_id=${auth.employee_id}`
+    );
+
+    const data = await res.json();
+
+    document.getElementById("notes").value = data.notes;
+}
+
+
+async function saveNotes() {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+    const text = document.getElementById("notes").value;
+
+    await fetch(`${API}/employee/notes`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            employee_id: auth.employee_id,
+            text: text
+        })
+    });
+
+    showToast("Сохранено");
+}
 /* ================= LOGOUT ================= */
 
 logoutBtn.onclick = async () => {
@@ -322,3 +377,5 @@ if (localStorage.getItem(AUTH_KEY)) {
 }
 
 setInterval(loadInProgress, 60000);
+loadTodayStats();
+loadNotes();
