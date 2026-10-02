@@ -88,7 +88,35 @@ class="bg-red-600 text-white px-4 py-2 rounded">
     <div id="totalBox"
         class="mt-6 p-4 bg-gray-100 rounded-xl text-lg font-semibold text-gray-800">
     </div>
+    <!-- SERVICES MANAGEMENT -->
+    <div class="mt-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-700">
+                Управление услугами
+            </h2>
 
+            <button onclick="loadServices()"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl transition">
+                🔄 Обновить
+            </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-200">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-200 text-gray-700">
+                    <tr>
+                        <th class="p-3 text-left">Услуга</th>
+                        <th class="p-3 text-center">Цена</th>
+                        <th class="p-3 text-center">Действие</th>
+                    </tr>
+                </thead>
+
+                <tbody id="servicesTable"
+                       class="divide-y divide-gray-200">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <!-- Modal -->

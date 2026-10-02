@@ -297,10 +297,87 @@ document.getElementById("logoutBtn").onclick = () => {
     location.href = "index.html";
 };
 
+/* ================= SERVICES MANAGEMENT ================= */
+
+async function loadServices() {
+
+    const res = await fetch(`${API}/services`);
+
+    if (!res.ok) {
+        showToast("Ошибка загрузки услуг", "error");
+        return;
+    }
+
+    const services = await res.json();
+
+    const table = document.getElementById("servicesTable");
+    table.innerHTML = "";
+
+    services.forEach(service => {
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td class="p-3 font-medium">
+                ${service.name}
+            </td>
+
+            <td class="p-3 text-center font-semibold">
+                ${service.price} ₸
+            </td>
+
+            <td class="p-3 text-center">
+                <button
+                    onclick="changeServicePrice(${service.id}, '${service.name.replace(/'/g, "\\'")}', ${service.price})"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-lg">
+                    ✏️ Изменить
+                </button>
+            </td>
+        `;
+
+        table.appendChild(row);
+    });
+}
+
+
+async function changeServicePrice(serviceId, serviceName, currentPrice) {
+
+    const newPrice = prompt(
+        `Изменить цену:\n${serviceName}\n\nТекущая цена: ${currentPrice} ₸`,
+        currentPrice
+    );
+
+    if (newPrice === null) return;
+
+    const price = Number(newPrice);
+
+    if (!Number.isInteger(price) || price < 0) {
+        showToast("Введите корректную цену", "error");
+        return;
+    }
+
+    const res = await fetch(
+        `${API}/services/${serviceId}/price?price=${price}`,
+        {
+            method: "PUT"
+        }
+    );
+
+    if (!res.ok) {
+        showToast("Не удалось изменить цену", "error");
+        return;
+    }
+
+    showToast("Цена успешно изменена");
+
+    await loadServices();
+}
 /* ================= INIT ================= */
 
 (async () => {
     await checkAdmin();
     await loadReport();
+    await loadServices();
+
     setInterval(loadReport, 60000);
 })();

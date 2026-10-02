@@ -196,6 +196,44 @@ def create_service(data: ServiceCreate, db: Session = Depends(get_db)):
     db.refresh(s)
     return {"id": s.id}
 
+
+
+@app.put("/services/{service_id}/price")
+def update_service_price(
+    service_id: int,
+    price: int,
+    db: Session = Depends(get_db)
+):
+    if price < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Цена не может быть отрицательной"
+        )
+
+    service = db.query(Service).filter(
+        Service.id == service_id
+    ).first()
+
+    if not service:
+        raise HTTPException(
+            status_code=404,
+            detail="Service not found"
+        )
+
+    old_price = service.price
+    service.price = price
+
+    db.commit()
+    db.refresh(service)
+
+    return {
+        "status": "updated",
+        "service_id": service.id,
+        "name": service.name,
+        "old_price": old_price,
+        "new_price": service.price
+    }
+
 @app.get("/services")
 def get_services(db: Session = Depends(get_db)):
 
