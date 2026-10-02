@@ -80,4 +80,7 @@ class OrderService(Base):
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
 
+    # Цена услуги на момент создания заказа
+    price = Column(Integer, nullable=False)
+
     service = relationship("Service")

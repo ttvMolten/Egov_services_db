@@ -38,9 +38,26 @@ def close_shift(db: Session, employee_id: int):
         Order.completed_at <= shift.ended_at
     ).all()
 
-    total = sum(o.service.price for o in orders if o.service)
-    cash = sum(o.service.price for o in orders if o.payment_type == "CASH" and o.service)
-    qr = sum(o.service.price for o in orders if o.payment_type == "QR" and o.service)
+
+    total = sum(
+    os.price
+    for o in orders
+    for os in o.services
+)
+
+    cash = sum(
+    os.price
+    for o in orders
+    if o.payment_type == "CASH"
+    for os in o.services
+)
+
+    qr = sum(
+    os.price
+    for o in orders
+    if o.payment_type == "QR"
+    for os in o.services
+)
 
     return {
         "employee": shift.employee.name,

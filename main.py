@@ -152,10 +152,10 @@ def employee_today_stats(employee_id: int, db: Session = Depends(get_db)):
     total = 0
 
     for o in orders:
-        for os in o.services:
-            if os.service:
-                services_count += 1
-                total += os.service.price
+     for os in o.services:
+        if os.service:
+            services_count += 1
+            total += os.price
 
     return {
         "services_count": services_count,
@@ -335,11 +335,9 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
         for os in o.services:
             if not os.service:
                 continue
-
-            price = os.service.price
+            price = os.price
             order_total += price
             services_count += 1
-
         total += order_total
 
         if o.payment_type == "CASH":
@@ -405,10 +403,10 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
                 continue
 
             order_total = sum(
-                os.service.price
-                for os in o.services
-                if os.service
-            )
+              os.price
+             for os in o.services
+                 if os.service
+)
 
             services_count += len(o.services)
             total += order_total
@@ -493,10 +491,10 @@ def admin_report_period(
                 continue
 
             order_total = sum(
-                os.service.price
-                for os in o.services
-                if os.service
-            )
+             os.price
+             for os in o.services
+                 if os.service
+)
 
             services_count += len(o.services)
             total += order_total
@@ -580,9 +578,8 @@ def send_admin_report(employee_id: int, db: Session = Depends(get_db)):
                 if not os.service:
                     continue
 
-                price = os.service.price
+                price = os.price
                 name = os.service.name
-
                 emp_total += price
                 total_all += price
                 emp_services_count += 1

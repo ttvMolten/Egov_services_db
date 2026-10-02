@@ -51,11 +51,21 @@ def start_order(db: Session, data):
 
     # 🔥 Добавляем услуги (учитывая дубликаты)
     for service_id in service_ids:
-        order_service = OrderService(
-            order_id=order.id,
-            service_id=service_id
-        )
-        db.add(order_service)
+
+         service = db.query(Service).filter(
+              Service.id == service_id
+         ).first()
+
+         if not service:
+          continue
+
+    order_service = OrderService(
+        order_id=order.id,
+        service_id=service_id,
+        price=service.price
+    )
+
+    db.add(order_service)
 
     db.commit()
 
