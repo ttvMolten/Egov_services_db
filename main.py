@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import FileResponse
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
-from models import Base, Employee, Order, Service, Shift
+from models import Base, Employee, Order, Service, Shift,OrderRefund
 from schemas import (
     PinAuth,
     OrderStart,
@@ -70,6 +70,36 @@ def get_local_day_range():
 
     return start_utc, end_utc
 
+# ================= REFUND CALCULATION =================
+
+def get_order_refunds(db: Session, order_id: int):
+    refunds = db.query(OrderRefund).filter(
+        OrderRefund.order_id == order_id
+    ).all()
+
+    total = 0
+    cash = 0
+    qr = 0
+    transfer = 0
+
+    for refund in refunds:
+        total += refund.amount
+
+        if refund.payment_type == "CASH":
+            cash += refund.amount
+
+        elif refund.payment_type == "QR":
+            qr += refund.amount
+
+        elif refund.payment_type == "TRANSFER":
+            transfer += refund.amount
+
+    return {
+        "total": total,
+        "cash": cash,
+        "qr": qr,
+        "transfer": transfer
+    }
 
 # ================= ADMIN CHECK =================
 
@@ -468,6 +498,8 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 # ================= ADMIN REPORT =================
 # ================= ADMIN EMPLOYEE TODAY =================
 
+# ================= ADMIN EMPLOYEE TODAY =================
+
 @app.get("/admin/employee/today")
 def admin_employee_today(
     employee_id: int,
@@ -475,7 +507,6 @@ def admin_employee_today(
     db: Session = Depends(get_db)
 ):
 
-    # Проверяем, что запрос делает администратор
     get_current_admin(employee_id, db)
 
     start_utc, end_utc = get_local_day_range()
@@ -492,6 +523,9 @@ def admin_employee_today(
     result = []
 
     total = 0
+    refunds_total = 0
+    net_total = 0
+
     cash = 0
     qr = 0
     transfer = 0
@@ -503,6 +537,18 @@ def admin_employee_today(
             for os in o.services
         )
 
+        refund_data = get_order_refunds(
+            db,
+            o.id
+        )
+
+        order_refunded = refund_data["total"]
+
+        order_net = order_total - order_refunded
+
+        if order_net < 0:
+            order_net = 0
+
         services_names = ", ".join(
             os.service.name
             for os in o.services
@@ -513,6 +559,8 @@ def admin_employee_today(
             "order_id": o.id,
             "service": services_names,
             "price": order_total,
+            "refund": order_refunded,
+            "net_price": order_net,
             "status": o.status,
             "payment_type": o.payment_type,
             "client_name": o.client_name,
@@ -526,33 +574,49 @@ def admin_employee_today(
         if o.status == "COMPLETED" and o.payment_status == "PAID":
 
             total += order_total
+            refunds_total += order_refunded
+            net_total += order_net
 
             if o.payment_type == "CASH":
-                cash += order_total
+                cash += order_net
 
             elif o.payment_type == "QR":
-                qr += order_total
+                qr += order_net
 
             elif o.payment_type == "TRANSFER":
-                transfer += order_total
+                transfer += order_net
 
     return {
         "orders": result,
+
         "total": total,
+        "refunds": refunds_total,
+        "net_total": net_total,
+
         "cash": cash,
         "qr": qr,
         "transfer": transfer
     }
 @app.get("/admin/report/today")
-def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
+def admin_report_today(
+    employee_id: int,
+    db: Session = Depends(get_db)
+):
 
     get_current_admin(employee_id, db)
 
     start_utc, end_utc = get_local_day_range()
-    employees = db.query(Employee).filter(Employee.is_active == True).all()
+
+    employees = db.query(Employee).filter(
+        Employee.is_active == True
+    ).all()
 
     result = []
+
     total_all = 0
+    refunds_all = 0
+    net_all = 0
+
     cash_all = 0
     qr_all = 0
     transfer_all = 0
@@ -568,32 +632,57 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
         ).all()
 
         total = 0
+        refunds = 0
+        net = 0
+
         cash = 0
         qr = 0
         transfer = 0
+
         services_count = 0
 
         for o in orders:
+
             if not o.services:
                 continue
 
             order_total = sum(
-              os.price
-             for os in o.services
-                 if os.service
-)
+                os.price
+                for os in o.services
+                if os.service
+            )
+
+            refund_data = get_order_refunds(
+                db,
+                o.id
+            )
+
+            order_refund = refund_data["total"]
+
+            order_net = order_total - order_refund
+
+            if order_net < 0:
+                order_net = 0
 
             services_count += len(o.services)
+
             total += order_total
+            refunds += order_refund
+            net += order_net
 
             if o.payment_type == "CASH":
-                cash += order_total
+                cash += order_net
+
             elif o.payment_type == "QR":
-                qr += order_total
+                qr += order_net
+
             elif o.payment_type == "TRANSFER":
-                transfer += order_total
+                transfer += order_net
 
         total_all += total
+        refunds_all += refunds
+        net_all += net
+
         cash_all += cash
         qr_all += qr
         transfer_all += transfer
@@ -602,23 +691,31 @@ def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
             "employee_id": emp.id,
             "employee": emp.name,
             "services_count": services_count,
+
             "total": total,
+            "refunds": refunds,
+            "net_total": net,
+
             "cash": cash,
             "qr": qr,
             "transfer": transfer
         })
 
     return {
-        "date": str((datetime.utcnow() + timedelta(hours=5)).date()),
+        "date": str(
+            (datetime.utcnow() + timedelta(hours=5)).date()
+        ),
+
         "employees": result,
+
         "total_all": total_all,
+        "refunds_all": refunds_all,
+        "net_all": net_all,
+
         "cash_all": cash_all,
         "qr_all": qr_all,
         "transfer_all": transfer_all
     }
-
-from datetime import datetime
-
 @app.get("/admin/report/period")
 def admin_report_period(
     employee_id: int,
@@ -629,17 +726,28 @@ def admin_report_period(
 
     get_current_admin(employee_id, db)
 
-    from datetime import timedelta
-
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)
 
     start_utc = start - timedelta(hours=5)
-    end_utc = end + timedelta(days=1) - timedelta(seconds=1) - timedelta(hours=5)
-    employees = db.query(Employee).filter(Employee.is_active == True).all()
+
+    end_utc = (
+        end
+        + timedelta(days=1)
+        - timedelta(seconds=1)
+        - timedelta(hours=5)
+    )
+
+    employees = db.query(Employee).filter(
+        Employee.is_active == True
+    ).all()
 
     result = []
+
     total_all = 0
+    refunds_all = 0
+    net_all = 0
+
     cash_all = 0
     qr_all = 0
     transfer_all = 0
@@ -655,9 +763,13 @@ def admin_report_period(
         ).all()
 
         total = 0
+        refunds = 0
+        net = 0
+
         cash = 0
         qr = 0
         transfer = 0
+
         services_count = 0
 
         for o in orders:
@@ -666,22 +778,42 @@ def admin_report_period(
                 continue
 
             order_total = sum(
-             os.price
-             for os in o.services
-                 if os.service
-)
+                os.price
+                for os in o.services
+                if os.service
+            )
+
+            refund_data = get_order_refunds(
+                db,
+                o.id
+            )
+
+            order_refund = refund_data["total"]
+
+            order_net = order_total - order_refund
+
+            if order_net < 0:
+                order_net = 0
 
             services_count += len(o.services)
+
             total += order_total
+            refunds += order_refund
+            net += order_net
 
             if o.payment_type == "CASH":
-                cash += order_total
+                cash += order_net
+
             elif o.payment_type == "QR":
-                qr += order_total
+                qr += order_net
+
             elif o.payment_type == "TRANSFER":
-                transfer += order_total
+                transfer += order_net
 
         total_all += total
+        refunds_all += refunds
+        net_all += net
+
         cash_all += cash
         qr_all += qr
         transfer_all += transfer
@@ -689,7 +821,11 @@ def admin_report_period(
         result.append({
             "employee": emp.name,
             "services": services_count,
+
             "total": total,
+            "refunds": refunds,
+            "net_total": net,
+
             "cash": cash,
             "qr": qr,
             "transfer": transfer
@@ -698,8 +834,13 @@ def admin_report_period(
     return {
         "start": start_date,
         "end": end_date,
+
         "employees": result,
+
         "total_all": total_all,
+        "refunds_all": refunds_all,
+        "net_all": net_all,
+
         "cash_all": cash_all,
         "qr_all": qr_all,
         "transfer_all": transfer_all
