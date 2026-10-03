@@ -12,10 +12,18 @@ from schemas import (
     OrderComplete,
     OrderNotProvided,
     ServiceCreate,
-    EmployeeCreate
+    EmployeeCreate,
+    OrderRefundCreate,
+    OrderCorrectionCreate
 )
 from services.auth import login_by_pin
-from services.orders import start_order, complete_order, not_provided
+from services.orders import (
+    start_order,
+    complete_order,
+    not_provided,
+    create_refund,
+    create_correction
+)
 from telegram_utils import send_telegram
 from dotenv import load_dotenv
 import os
@@ -297,6 +305,58 @@ def finish_order(order_id: int, data: OrderComplete, db: Session = Depends(get_d
 @app.post("/orders/{order_id}/not-provided")
 def fail_order(order_id: int, data: OrderNotProvided, db: Session = Depends(get_db)):
     return not_provided(db, order_id, data.reason)
+# ================= REFUND =================
+
+@app.post("/orders/{order_id}/refund")
+def refund_order(
+    order_id: int,
+    employee_id: int,
+    data: OrderRefundCreate,
+    db: Session = Depends(get_db)
+):
+    result = create_refund(
+        db=db,
+        order_id=order_id,
+        employee_id=employee_id,
+        amount=data.amount,
+        payment_type=data.payment_type,
+        reason=data.reason
+    )
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=400,
+            detail=result["error"]
+        )
+
+    return result
+
+
+# ================= CORRECTION =================
+
+@app.post("/orders/{order_id}/correction")
+def correction_order(
+    order_id: int,
+    employee_id: int,
+    data: OrderCorrectionCreate,
+    db: Session = Depends(get_db)
+):
+    result = create_correction(
+        db=db,
+        order_id=order_id,
+        employee_id=employee_id,
+        new_service_id=data.new_service_id,
+        new_price=data.new_price,
+        reason=data.reason
+    )
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=400,
+            detail=result["error"]
+        )
+
+    return result
 @app.get("/orders/in-progress")
 def get_in_progress(employee_id: int, db: Session = Depends(get_db)):
 
@@ -406,6 +466,83 @@ def end_shift(employee_id: int, db: Session = Depends(get_db)):
 
     return {"status": "ended"}
 # ================= ADMIN REPORT =================
+# ================= ADMIN EMPLOYEE TODAY =================
+
+@app.get("/admin/employee/today")
+def admin_employee_today(
+    employee_id: int,
+    target_employee_id: int,
+    db: Session = Depends(get_db)
+):
+
+    # Проверяем, что запрос делает администратор
+    get_current_admin(employee_id, db)
+
+    start_utc, end_utc = get_local_day_range()
+
+    orders = db.query(Order).filter(
+        Order.employee_id == target_employee_id,
+        Order.completed_at >= start_utc,
+        Order.completed_at <= end_utc,
+        Order.status.in_(["COMPLETED", "NOT_PROVIDED"])
+    ).order_by(
+        Order.completed_at.desc()
+    ).all()
+
+    result = []
+
+    total = 0
+    cash = 0
+    qr = 0
+    transfer = 0
+
+    for o in orders:
+
+        order_total = sum(
+            os.price
+            for os in o.services
+        )
+
+        services_names = ", ".join(
+            os.service.name
+            for os in o.services
+            if os.service
+        )
+
+        result.append({
+            "order_id": o.id,
+            "service": services_names,
+            "price": order_total,
+            "status": o.status,
+            "payment_type": o.payment_type,
+            "client_name": o.client_name,
+            "completed_at": (
+                o.completed_at.isoformat()
+                if o.completed_at
+                else None
+            )
+        })
+
+        if o.status == "COMPLETED" and o.payment_status == "PAID":
+
+            total += order_total
+
+            if o.payment_type == "CASH":
+                cash += order_total
+
+            elif o.payment_type == "QR":
+                qr += order_total
+
+            elif o.payment_type == "TRANSFER":
+                transfer += order_total
+
+    return {
+        "orders": result,
+        "total": total,
+        "cash": cash,
+        "qr": qr,
+        "transfer": transfer
+    }
 @app.get("/admin/report/today")
 def admin_report_today(employee_id: int, db: Session = Depends(get_db)):
 

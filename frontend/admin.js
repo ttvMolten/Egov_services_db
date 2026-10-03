@@ -144,21 +144,59 @@ async function openEmployeeReport(employeeId, employeeName) {
         modalContent.innerHTML = `<p class="text-gray-500">Нет заказов</p>`;
     }
 
-    data.orders.forEach(o => {
+   data.orders.forEach(o => {
 
-        const block = document.createElement("div");
-        block.className = "border-b pb-2 mb-2";
+    const block = document.createElement("div");
+    block.className = "border-b pb-3 mb-3";
 
-        block.innerHTML = `
+    block.innerHTML = `
+        <div class="mb-2">
             <p class="font-semibold">${o.service}</p>
-            <p>${o.price} ₸</p>
-            <p class="text-sm text-gray-500">
-                ${o.status} | ${o.payment_type || "-"}
-            </p>
-        `;
 
-        modalContent.appendChild(block);
-    });
+            <p class="text-lg font-bold">
+                ${o.price} ₸
+            </p>
+
+            <p class="text-sm text-gray-500">
+                Заказ #${o.order_id}
+                |
+                ${o.status}
+                |
+                ${o.payment_type || "-"}
+            </p>
+
+            ${
+                o.client_name
+                    ? `<p class="text-sm text-gray-500">
+                        Клиент: ${o.client_name}
+                       </p>`
+                    : ""
+            }
+        </div>
+
+        ${
+            o.status === "COMPLETED"
+                ? `
+                    <div class="flex gap-2">
+                        <button
+                            onclick="refundOrder(${o.order_id}, ${o.price})"
+                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg">
+                            ↩️ Возврат
+                        </button>
+
+                        <button
+                            onclick="correctOrder(${o.order_id})"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg">
+                            ✏️ Корректировка
+                        </button>
+                    </div>
+                  `
+                : ""
+        }
+    `;
+
+    modalContent.appendChild(block);
+});
 
     const totals = document.createElement("div");
     totals.className = "mt-4 font-semibold";
@@ -289,6 +327,197 @@ async function deactivateEmployee(id) {
     } else {
         showToast("Ошибка", "error");
     }
+}
+/* ================= REFUND ================= */
+
+async function refundOrder(orderId, orderPrice) {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    if (!auth) return;
+
+    const amountInput = prompt(
+        `Сумма возврата для заказа #${orderId}\n\nМаксимум: ${orderPrice} ₸`,
+        orderPrice
+    );
+
+    if (amountInput === null) return;
+
+    const amount = Number(amountInput);
+
+    if (!Number.isInteger(amount) || amount <= 0) {
+        showToast("Введите корректную сумму", "error");
+        return;
+    }
+
+    if (amount > orderPrice) {
+        showToast("Сумма возврата больше стоимости заказа", "error");
+        return;
+    }
+
+    const reason = prompt(
+        "Причина возврата:"
+    );
+
+    if (!reason || !reason.trim()) {
+        showToast("Укажите причину возврата", "error");
+        return;
+    }
+
+    const paymentTypeInput = prompt(
+        "Способ возврата:\n\nCASH — наличные\nQR — QR\nTRANSFER — перевод",
+        "CASH"
+    );
+
+    if (!paymentTypeInput) return;
+
+    const paymentType = paymentTypeInput.toUpperCase();
+
+    if (!["CASH", "QR", "TRANSFER"].includes(paymentType)) {
+        showToast("Неверный способ возврата", "error");
+        return;
+    }
+
+    if (!confirm(
+        `Оформить возврат?\n\n` +
+        `Заказ: #${orderId}\n` +
+        `Сумма: ${amount} ₸\n` +
+        `Способ: ${paymentType}\n` +
+        `Причина: ${reason}`
+    )) {
+        return;
+    }
+
+    const res = await fetch(
+        `${API}/orders/${orderId}/refund?employee_id=${auth.employee_id}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                amount: amount,
+                payment_type: paymentType,
+                reason: reason.trim()
+            })
+        }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        showToast(
+            data.detail || "Ошибка возврата",
+            "error"
+        );
+        return;
+    }
+
+    showToast(`Возврат ${amount} ₸ оформлен`);
+
+    closeModal();
+    await loadReport();
+}
+/* ================= CORRECTION ================= */
+
+async function correctOrder(orderId) {
+
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY));
+
+    if (!auth) return;
+
+    const servicesRes = await fetch(`${API}/services`);
+
+    if (!servicesRes.ok) {
+        showToast("Не удалось загрузить услуги", "error");
+        return;
+    }
+
+    const services = await servicesRes.json();
+
+    let serviceList = "Выберите новую услугу:\n\n";
+
+    services.forEach(service => {
+        serviceList +=
+            `${service.id} — ${service.name} — ${service.price} ₸\n`;
+    });
+
+    const serviceIdInput = prompt(serviceList);
+
+    if (serviceIdInput === null) return;
+
+    const newServiceId = Number(serviceIdInput);
+
+    const selectedService = services.find(
+        service => service.id === newServiceId
+    );
+
+    if (!selectedService) {
+        showToast("Услуга не найдена", "error");
+        return;
+    }
+
+    const priceInput = prompt(
+        `Новая цена для:\n${selectedService.name}`,
+        selectedService.price
+    );
+
+    if (priceInput === null) return;
+
+    const newPrice = Number(priceInput);
+
+    if (!Number.isInteger(newPrice) || newPrice < 0) {
+        showToast("Введите корректную цену", "error");
+        return;
+    }
+
+    const reason = prompt(
+        "Причина корректировки:"
+    );
+
+    if (!reason || !reason.trim()) {
+        showToast("Укажите причину корректировки", "error");
+        return;
+    }
+
+    if (!confirm(
+        `Изменить заказ #${orderId}?\n\n` +
+        `Новая услуга: ${selectedService.name}\n` +
+        `Новая цена: ${newPrice} ₸\n` +
+        `Причина: ${reason}`
+    )) {
+        return;
+    }
+
+    const res = await fetch(
+        `${API}/orders/${orderId}/correction?employee_id=${auth.employee_id}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                new_service_id: newServiceId,
+                new_price: newPrice,
+                reason: reason.trim()
+            })
+        }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        showToast(
+            data.detail || "Ошибка корректировки",
+            "error"
+        );
+        return;
+    }
+
+    showToast("Заказ скорректирован");
+
+    closeModal();
+    await loadReport();
 }
 /* ================= LOGOUT ================= */
 

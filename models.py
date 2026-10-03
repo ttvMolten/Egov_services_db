@@ -71,6 +71,17 @@ class Order(Base):
     service = relationship("Service", back_populates="orders")
     employee = relationship("Employee", back_populates="orders")
     services = relationship("OrderService", backref="order", cascade="all, delete")
+    refunds = relationship(
+        "OrderRefund",
+        back_populates="order",
+        cascade="all, delete"
+    )
+
+    corrections = relationship(
+        "OrderCorrection",
+        back_populates="order",
+        cascade="all, delete"
+    )
 
 
 class OrderService(Base):
@@ -84,3 +95,98 @@ class OrderService(Base):
     price = Column(Integer, nullable=False)
 
     service = relationship("Service")
+
+# ===== Order Refund =====
+class OrderRefund(Base):
+    __tablename__ = "order_refunds"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id"),
+        nullable=False
+    )
+
+    processed_by_employee_id = Column(
+        Integer,
+        ForeignKey("employees.id"),
+        nullable=False
+    )
+
+    amount = Column(Integer, nullable=False)
+
+    payment_type = Column(
+        String,
+        nullable=False
+    )  # CASH / QR / TRANSFER
+
+    reason = Column(String, nullable=False)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False
+    )
+
+    order = relationship(
+        "Order",
+        back_populates="refunds"
+    )
+
+    processed_by = relationship(
+        "Employee"
+    )
+
+
+# ===== Order Correction =====
+class OrderCorrection(Base):
+    __tablename__ = "order_corrections"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id"),
+        nullable=False
+    )
+
+    corrected_by_employee_id = Column(
+        Integer,
+        ForeignKey("employees.id"),
+        nullable=False
+    )
+
+    old_service_id = Column(
+        Integer,
+        ForeignKey("services.id"),
+        nullable=True
+    )
+
+    new_service_id = Column(
+        Integer,
+        ForeignKey("services.id"),
+        nullable=True
+    )
+
+    old_price = Column(Integer, nullable=False)
+    new_price = Column(Integer, nullable=False)
+
+    difference = Column(Integer, nullable=False)
+
+    reason = Column(String, nullable=False)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False
+    )
+
+    order = relationship(
+        "Order",
+        back_populates="corrections"
+    )
+
+    corrected_by = relationship(
+        "Employee"
+    )

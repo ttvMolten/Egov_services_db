@@ -32,3 +32,14 @@ class EmployeeCreate(BaseModel):
     branch_id: int
     pin: str
     role: str = "EMPLOYEE"
+
+class OrderRefundCreate(BaseModel):
+    amount: int
+    payment_type: str  # CASH | QR | TRANSFER
+    reason: str
+
+
+class OrderCorrectionCreate(BaseModel):
+    new_service_id: int
+    new_price: int
+    reason: str
